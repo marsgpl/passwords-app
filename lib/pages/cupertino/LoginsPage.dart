@@ -119,17 +119,19 @@ class LoginsPageState extends BasePageState<LoginsPage> with SingleTickerProvide
             child: Container(
                 width: 42,
                 height: 42,
-                margin: const EdgeInsets.only(right: 12),
+                margin: const EdgeInsets.only(right: 14),
                 alignment: const Alignment(0.0, 0.0),
-                decoration: new BoxDecoration(
-                    color: Styles.circleColor,
+                decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    border: Border.all(
+                        width: 1.5,
+                        color: CupertinoColors.inactiveGray,
+                    ),
                 ),
                 child: Text(
                     (item.title ?? '').substring(0, 1).toUpperCase(),
                     style: const TextStyle(
-                        color: Styles.whiteColor,
-                        fontWeight: FontWeight.w600,
+                        color: CupertinoColors.inactiveGray,
                         fontSize: 24,
                     ),
                 ),
@@ -145,11 +147,11 @@ class LoginsPageState extends BasePageState<LoginsPage> with SingleTickerProvide
                         child: Text(
                             item.title,
                             style: const TextStyle(
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                             ),
                         ),
                     ),
-                    Text(item.login),
+                    Text(item.login, style: Styles.loginInList),
                     Row(
                         children: [
                             item.login.length == 0 ? Container() : CupertinoButton(
@@ -176,12 +178,18 @@ class LoginsPageState extends BasePageState<LoginsPage> with SingleTickerProvide
 
         Widget open = CupertinoButton(
             padding: EdgeInsets.zero,
-            child: const Icon(CupertinoIcons.right_chevron, semanticLabel: 'Edit'),
+            child: const Icon(
+                CupertinoIcons.right_chevron,
+                semanticLabel: 'Edit',
+                color: Styles.hintColor,
+            ),
             onPressed: () => gotoEditLoginPage(item),
         );
 
         Widget row = SafeArea(
-            minimum: const EdgeInsets.fromLTRB(14, 14, 8, 4),
+            minimum: index == 0 ?
+                const EdgeInsets.fromLTRB(14, 14, 8, 4) :
+                const EdgeInsets.fromLTRB(14, 14, 8, 4),
             child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
