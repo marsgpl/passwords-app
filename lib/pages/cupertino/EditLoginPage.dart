@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:passwords/Styles@cupertino.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/model/Login.dart';
+import 'package:passwords/pages/cupertino/BasePage.dart';
 import 'package:passwords/widgets/cupertino/loginForm.dart';
 import 'package:provider/provider.dart';
 
@@ -17,18 +18,22 @@ class EditLoginPage extends StatefulWidget {
     EditLoginPageState createState() => EditLoginPageState();
 }
 
-class EditLoginPageState extends State<EditLoginPage> {
-    TextEditingController title;
-    TextEditingController login;
-    TextEditingController password;
-    TextEditingController website;
+class EditLoginPageState extends BasePageState<EditLoginPage> {
+    TextEditingController titleController;
+    TextEditingController loginController;
+    TextEditingController passwordController;
+    TextEditingController websiteController;
+    FocusNode titleFocus = FocusNode();
+    FocusNode loginFocus = FocusNode();
+    FocusNode passwordFocus = FocusNode();
+    FocusNode websiteFocus = FocusNode();
 
     @override
     void initState() {
-        title = TextEditingController(text: widget.item.title);
-        login = TextEditingController(text: widget.item.login);
-        password = TextEditingController(text: widget.item.password);
-        website = TextEditingController(text: widget.item.website);
+        titleController = TextEditingController(text: widget.item.title);
+        loginController = TextEditingController(text: widget.item.login);
+        passwordController = TextEditingController(text: widget.item.password);
+        websiteController = TextEditingController(text: widget.item.website);
 
         super.initState();
     }
@@ -51,16 +56,19 @@ class EditLoginPageState extends State<EditLoginPage> {
     );
 
     Future<void> save() async {
-        String titleText = title.text.trim();
+        String titleText = titleController.text.trim();
+        String loginText = loginController.text.trim();
 
-        if (titleText.length == 0) {
-            return saveErrorDialog('Title is empty');
-        }
+        if (titleText.length == 0) return saveErrorDialog('Title is empty');
+        if (loginText.length == 0) return saveErrorDialog('Login is empty');
+
+        // capitalize
+        titleText = '${titleText[0].toUpperCase()}${titleText.substring(1)}';
 
         widget.item.title = titleText;
-        widget.item.login = login.text.trim();
-        widget.item.password = password.text;
-        widget.item.website = website.text.trim();
+        widget.item.login = loginText;
+        widget.item.password = passwordController.text;
+        widget.item.website = websiteController.text.trim();
 
         AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
 
@@ -125,10 +133,14 @@ class EditLoginPageState extends State<EditLoginPage> {
         return CupertinoPageScaffold(
             navigationBar: CupertinoNavigationBar(),
             child: loginForm(
-                title: title,
-                login: login,
-                password: password,
-                website: website,
+                titleController: titleController,
+                loginController: loginController,
+                passwordController: passwordController,
+                websiteController: websiteController,
+                titleFocus: titleFocus,
+                loginFocus: loginFocus,
+                passwordFocus: passwordFocus,
+                websiteFocus: websiteFocus,
                 onSave: save,
                 onMoar: showActionSheet,
             ),

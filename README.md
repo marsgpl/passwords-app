@@ -1,9 +1,5 @@
 # Passwords
 
-## Delay
-
-    await Future.delayed(const Duration(milliseconds: 100));
-
 ## Init
 
     flutter create --pub --template=app --description 'Keychain app' --org one.eki --project-name passwords passwords

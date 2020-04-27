@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:passwords/pages/cupertino/BasePage.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:passwords/Styles@cupertino.dart';
 import 'package:passwords/pages/cupertino/AddLoginPage.dart';
 import 'package:passwords/pages/cupertino/EditLoginPage.dart';
@@ -12,7 +14,7 @@ class LoginsPage extends StatefulWidget {
     LoginsPageState createState() => LoginsPageState();
 }
 
-class LoginsPageState extends State<LoginsPage> with SingleTickerProviderStateMixin {
+class LoginsPageState extends BasePageState<LoginsPage> with SingleTickerProviderStateMixin {
     @override
     void initState() {
         super.initState();
@@ -20,6 +22,24 @@ class LoginsPageState extends State<LoginsPage> with SingleTickerProviderStateMi
         AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
 
         model.initLogins();
+    }
+
+    Future<void> openItemWebsite(Login item) async {
+        if (item.website == null || item.website.trim().length == 0) {
+            return showFeedback('${item.title}: website is empty');
+        }
+
+        String url = Uri.encodeFull(item.website);
+
+        if (!url.contains('://')) {
+            url = 'https://$url';
+        }
+
+        if (!await canLaunch(url)) {
+            return showFeedback('Website open error\n$url');
+        }
+
+        await launch(url, forceSafariVC: false);
     }
 
     @override
@@ -64,9 +84,14 @@ class LoginsPageState extends State<LoginsPage> with SingleTickerProviderStateMi
     }
 
     Widget buildNavigationBar() => CupertinoNavigationBar(
-        trailing: GestureDetector(
-            onTap: gotoAddLoginPage,
-            child: const Icon(CupertinoIcons.add, semanticLabel: 'Add'),
+        trailing: Container(
+            transform: Matrix4.translationValues(6, 0, 0),
+            child: CupertinoButton(
+                borderRadius: const BorderRadius.all(Radius.zero),
+                padding: const EdgeInsets.all(0),
+                onPressed: gotoAddLoginPage,
+                child: const Icon(CupertinoIcons.add, semanticLabel: 'Add', size: 30),
+            ),
         ),
     );
 
@@ -82,52 +107,65 @@ class LoginsPageState extends State<LoginsPage> with SingleTickerProviderStateMi
         child: Text('No logins yet'),
     );
 
-    Future<void> showCopiedFeedback(String message) async {
-        showCupertinoDialog<void>(
-            context: context,
-            builder: (BuildContext context) => CupertinoAlertDialog(
-                content: Text(message,
-                    style: const TextStyle(
-                        fontSize: 20,
-                        color: Styles.notImportantColor,
-                    ),
-                ),
-            ),
-        );
-
-        await Future.delayed(const Duration(milliseconds: 1000));
-
-        Navigator.of(context, rootNavigator: true).pop('Discard');
-    }
-
     Widget buildBodyItemsRow({
         int index,
         Login item,
         bool isLastItem = false,
     }) {
+        Widget icon = CupertinoButton(
+            borderRadius: const BorderRadius.all(Radius.zero),
+            padding: const EdgeInsets.all(0),
+            onPressed: () => openItemWebsite(item),
+            child: Container(
+                width: 42,
+                height: 42,
+                margin: const EdgeInsets.only(right: 12),
+                alignment: const Alignment(0.0, 0.0),
+                decoration: new BoxDecoration(
+                    color: Styles.circleColor,
+                    shape: BoxShape.circle,
+                ),
+                child: Text(
+                    (item.title ?? '').substring(0, 1).toUpperCase(),
+                    style: const TextStyle(
+                        color: Styles.whiteColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 24,
+                    ),
+                ),
+            ),
+        );
+
         Widget info = Expanded(
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                    Text(item.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Container(
+                        margin: EdgeInsets.only(bottom: 3),
+                        child: Text(
+                            item.title,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                            ),
+                        ),
+                    ),
                     Text(item.login),
                     Row(
                         children: [
-                            const Text('copy:', style: Styles.hint),
-                            CupertinoButton(
-                                child: const Text('login'),
-                                padding: const EdgeInsets.fromLTRB(32, 0, 16, 0),
+                            item.login.length == 0 ? Container() : CupertinoButton(
+                                child: const Text('Copy login'),
+                                padding: const EdgeInsets.only(right: 16),
                                 onPressed: () {
                                     Clipboard.setData(ClipboardData(text: item.login));
-                                    showCopiedFeedback('Login copied');
+                                    showFeedback('Login copied');
                                 },
                             ),
-                            CupertinoButton(
-                                child: const Text('password'),
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                            item.password.length == 0 ? Container() : CupertinoButton(
+                                child: const Text('Copy password'),
+                                padding: const EdgeInsets.only(left: 16),
                                 onPressed: () {
                                     Clipboard.setData(ClipboardData(text: item.password));
-                                    showCopiedFeedback('Password copied');
+                                    showFeedback('Password copied');
                                 },
                             ),
                         ],
@@ -143,10 +181,11 @@ class LoginsPageState extends State<LoginsPage> with SingleTickerProviderStateMi
         );
 
         Widget row = SafeArea(
-            minimum: const EdgeInsets.fromLTRB(18, 14, 8, 4),
+            minimum: const EdgeInsets.fromLTRB(14, 14, 8, 4),
             child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                    icon,
                     info,
                     open,
                 ],
@@ -154,7 +193,8 @@ class LoginsPageState extends State<LoginsPage> with SingleTickerProviderStateMi
         );
 
         Widget divider = Padding(
-            padding: const EdgeInsets.only(left: 18),
+            // rowMarginLeft + circleWidth + circleMarginRight
+            padding: const EdgeInsets.only(left: (14 + 42 + 12) + 0.0),
             child: Container(
                 height: .5,
                 color: Styles.dividerColor,

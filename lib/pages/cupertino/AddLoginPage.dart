@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/model/Login.dart';
+import 'package:passwords/pages/cupertino/BasePage.dart';
 import 'package:passwords/widgets/cupertino/loginForm.dart';
 import 'package:provider/provider.dart';
 
@@ -9,11 +10,15 @@ class AddLoginPage extends StatefulWidget {
     AddLoginPageState createState() => AddLoginPageState();
 }
 
-class AddLoginPageState extends State<AddLoginPage> {
-    TextEditingController title = TextEditingController(text: '');
-    TextEditingController login = TextEditingController(text: '');
-    TextEditingController password = TextEditingController(text: '');
-    TextEditingController website = TextEditingController(text: '');
+class AddLoginPageState extends BasePageState<AddLoginPage> {
+    TextEditingController titleController = TextEditingController(text: '');
+    TextEditingController loginController = TextEditingController(text: '');
+    TextEditingController passwordController = TextEditingController(text: '');
+    TextEditingController websiteController = TextEditingController(text: '');
+    FocusNode titleFocus = FocusNode();
+    FocusNode loginFocus = FocusNode();
+    FocusNode passwordFocus = FocusNode();
+    FocusNode websiteFocus = FocusNode();
 
     Future<void> addErrorDialog(String reason) async => showCupertinoDialog<void>(
         context: context,
@@ -33,17 +38,20 @@ class AddLoginPageState extends State<AddLoginPage> {
     );
 
     Future<void> add() async {
-        String titleText = title.text.trim();
+        String titleText = titleController.text.trim();
+        String loginText = loginController.text.trim();
 
-        if (titleText.length == 0) {
-            return addErrorDialog('Title is empty');
-        }
+        if (titleText.length == 0) return addErrorDialog('Title is empty');
+        if (loginText.length == 0) return addErrorDialog('Login is empty');
+
+        // capitalize
+        titleText = '${titleText[0].toUpperCase()}${titleText.substring(1)}';
 
         Login item = Login(
             title: titleText,
-            login: login.text.trim(),
-            password: password.text,
-            website: website.text.trim(),
+            login: loginText,
+            password: passwordController.text,
+            website: websiteController.text.trim(),
         );
 
         AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
@@ -58,10 +66,14 @@ class AddLoginPageState extends State<AddLoginPage> {
         return CupertinoPageScaffold(
             navigationBar: CupertinoNavigationBar(),
             child: loginForm(
-                title: title,
-                login: login,
-                password: password,
-                website: website,
+                titleController: titleController,
+                loginController: loginController,
+                passwordController: passwordController,
+                websiteController: websiteController,
+                titleFocus: titleFocus,
+                loginFocus: loginFocus,
+                passwordFocus: passwordFocus,
+                websiteFocus: websiteFocus,
                 onAdd: add,
             ),
         );

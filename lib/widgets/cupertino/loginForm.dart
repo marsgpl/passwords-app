@@ -5,13 +5,12 @@ const double PAD = 10;
 
 Widget loginFormRow({
     TextEditingController controller,
+    FocusNode focusNode,
     TextInputType keyboardType = TextInputType.text,
     String title,
     String description,
     bool isFirst = false,
 }) {
-    FocusNode focusNode = FocusNode();
-
     Widget label = GestureDetector(
         onTap: focusNode.requestFocus,
         child: Padding(
@@ -83,10 +82,14 @@ Widget loginFormMoar(Function callback) => Padding(
 
 Widget loginForm({
     String pageTitle,
-    TextEditingController title,
-    TextEditingController login,
-    TextEditingController password,
-    TextEditingController website,
+    TextEditingController titleController,
+    TextEditingController loginController,
+    TextEditingController passwordController,
+    TextEditingController websiteController,
+    FocusNode titleFocus,
+    FocusNode loginFocus,
+    FocusNode passwordFocus,
+    FocusNode websiteFocus,
     Function onAdd,
     Function onSave,
     Function onMoar,
@@ -101,25 +104,29 @@ Widget loginForm({
                     delegate: SliverChildBuilderDelegate((context, index) {
                         switch (index) {
                             case 0: return loginFormRow(
-                                controller: title,
+                                controller: titleController,
+                                focusNode: titleFocus,
                                 title: 'Title',
                                 description: 'Service name',
                                 isFirst: true,
                             );
                             case 1: return loginFormRow(
-                                controller: login,
+                                controller: loginController,
+                                focusNode: loginFocus,
                                 keyboardType: TextInputType.emailAddress,
                                 title: 'Login',
                                 description: 'Username or email',
                             );
                             case 2: return loginFormRow(
-                                controller: password,
+                                controller: passwordController,
+                                focusNode: passwordFocus,
                                 keyboardType: TextInputType.visiblePassword,
                                 title: 'Password',
                                 description: '··········',
                             );
                             case 3: return loginFormRow(
-                                controller: website,
+                                controller: websiteController,
+                                focusNode: websiteFocus,
                                 keyboardType: TextInputType.url,
                                 title: 'Website',
                                 description: 'Service url',

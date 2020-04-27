@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:passwords/pages/cupertino/BasePage.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/Styles@cupertino.dart';
@@ -8,7 +9,7 @@ class BankCardsPage extends StatefulWidget {
     BankCardsPageState createState() => BankCardsPageState();
 }
 
-class BankCardsPageState extends State<BankCardsPage> {
+class BankCardsPageState extends BasePageState<BankCardsPage> {
     bool inited = false;
     bool locked = true;
 
@@ -81,7 +82,7 @@ class BankCardsPageState extends State<BankCardsPage> {
                 CupertinoButton(
                     child: const Text('Unlock forever for 1 USD'),
                     color: Styles.primaryColor,
-                    onPressed: model.unlockBankCardsPage,
+                    onPressed: () => showFeedback('Not available yet'),
                 ),
                 Padding(
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),

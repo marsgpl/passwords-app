@@ -29,6 +29,7 @@ class DocumentsRepository {
         if (settings['unlocked'] != null) {
             print('removing unlocked status: $storageSettingsKey');
             settings.remove('unlocked');
+            await saveSettings();
         }
     }
 
