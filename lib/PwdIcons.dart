@@ -16,6 +16,10 @@
 ///         Author:    Google
 ///         License:   Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
 ///         Homepage:  https://design.google.com/icons/
+/// * MFG Labs, Copyright (C) 2012 by Daniel Bruce
+///         Author:    MFG Labs
+///         License:   SIL (http://scripts.sil.org/OFL)
+///         Homepage:  http://www.mfglabs.com/
 /// * Entypo, Copyright (C) 2012 by Daniel Bruce
 ///         Author:    Daniel Bruce
 ///         License:   SIL (http://scripts.sil.org/OFL)
@@ -34,6 +38,7 @@ class PwdIcons {
   static const _kFontPkg = null;
 
   static const IconData login = IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData settings = IconData(0xe801, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData document = IconData(0xe803, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData bank_card = IconData(0xe812, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

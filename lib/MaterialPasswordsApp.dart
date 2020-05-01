@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:passwords/constants.dart';
-import 'package:passwords/pages/material/LoginsPage.dart';
+import 'package:passwords/pages/material/TabsPage.dart';
 
 class MaterialPasswordsApp extends StatelessWidget {
     @override
@@ -8,9 +8,9 @@ class MaterialPasswordsApp extends StatelessWidget {
         return MaterialApp(
             title: APP_TITLE,
             theme: ThemeData(
-                primarySwatch: Colors.blue,
+                primarySwatch: PRIMARY_COLOR,
             ),
-            home: LoginsPage(),
+            home: TabsPage(),
         );
     }
 }

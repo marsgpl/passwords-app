@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 
-class LoginsPage extends StatefulWidget {
+class BankCardsPage extends StatefulWidget {
     @override
-    LoginsPageState createState() => LoginsPageState();
+    BankCardsPageState createState() => BankCardsPageState();
 }
 
-class LoginsPageState extends State<LoginsPage> {
+class BankCardsPageState extends State<BankCardsPage> {
     @override
     void initState() {
         super.initState();
 
         AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
 
-        model.initLogins();
+        model.initBankCards();
     }
 
     @override
     Widget build(BuildContext context) => Center(
-        child: const Text('logins here'),
+        child: const Text('bank cards here'),
     );
 }

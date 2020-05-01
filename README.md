@@ -18,7 +18,7 @@
 
     https://fluttericon.com/
 
-    cp ~/Downloads/flutter-icons-*/fonts/PwdIcons.ttf ~/projects/passwords/fonts; cp ~/Downloads/flutter-icons-*/pwd_icons_icons.dart ~/projects/passwords/lib/PwdIcons.dart
+    cp ~/Downloads/flutter-icons-*/fonts/PwdIcons.ttf ~/projects/passwords-app/fonts; cp ~/Downloads/flutter-icons-*/pwd_icons_icons.dart ~/projects/passwords-app/lib/PwdIcons.dart; rm -rf ~/Downloads/flutter-icons-*
 
 ## Etc
 

@@ -1,25 +1,27 @@
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:passwords/model/Login.dart';
+import 'package:passwords/model/BankCard.dart';
+import 'package:passwords/model/Document.dart';
 import 'package:passwords/model/LoginsRepository.dart';
 import 'package:passwords/model/BankCardsRepository.dart';
 import 'package:passwords/model/DocumentsRepository.dart';
 
 class AppStateModel extends foundation.ChangeNotifier {
-    LoginsRepository logins = LoginsRepository();
-    BankCardsRepository bankCards = BankCardsRepository();
-    DocumentsRepository documents = DocumentsRepository();
+    final LoginsRepository logins = LoginsRepository();
+    final BankCardsRepository bankCards = BankCardsRepository();
+    final DocumentsRepository documents = DocumentsRepository();
 
     bool loginsInited = false;
     bool bankCardsInited = false;
     bool documentsInited = false;
 
-    List<String> loginsVisibleIds;
-    List<String> bankCardsVisibleIds;
-    List<String> documentsVisibleIds;
-
     String loginsFilter = '';
     String bankCardsFilter = '';
     String documentsFilter = '';
+
+    List<String> loginsVisibleIds;
+    List<String> bankCardsVisibleIds;
+    List<String> documentsVisibleIds;
 
     bool loginsNotFoundBySearch() =>
         loginsInited &&
