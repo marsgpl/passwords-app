@@ -1,18 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
-
-// ios
-import 'package:flutter/cupertino.dart';
-import 'package:passwords/CupertinoPasswordsApp.dart';
-
-// android
-// import 'package:flutter/material.dart';
-// import 'package:passwords/MaterialPasswordsApp.dart';
-
-// pubspec.yaml
-// flutter:
-//   uses-material-design: true
+import 'package:passwords/MaterialPasswordsApp.dart';
 
 void main() {
     WidgetsFlutterBinding.ensureInitialized();
@@ -22,13 +12,8 @@ void main() {
         DeviceOrientation.portraitDown,
     ]);
 
-    // ios
-    return runApp(
-        ChangeNotifierProvider<AppStateModel>(
-            create: (context) => AppStateModel(),
-            child: CupertinoPasswordsApp(),
-        ));
-
-    // android
-    // return runApp(MaterialPasswordsApp());
+    return runApp(ChangeNotifierProvider<AppStateModel>(
+        create: (context) => AppStateModel(),
+        child: MaterialPasswordsApp(),
+    ));
 }
