@@ -48,9 +48,12 @@ class Login implements Comparable<Login> {
         login = jsonData['login'],
         password = jsonData['password'],
         website = jsonData['website'],
-        backup2faCodes = jsonData['backup2faCodes'],
-        secretQuestions = jsonData['secretQuestions'],
-        secretQuestionsAnswers = jsonData['secretQuestionsAnswers'];
+        backup2faCodes = jsonData['backup2faCodes'] == null ? [] :
+            jsonData['backup2faCodes'].cast<String>(),
+        secretQuestions = jsonData['secretQuestions'] == null ? [] :
+            jsonData['secretQuestions'].cast<String>(),
+        secretQuestionsAnswers = jsonData['secretQuestionsAnswers'] == null ? [] :
+            jsonData['secretQuestionsAnswers'].cast<String>();
 
     Map<String, dynamic> toJson() => {
         'id': id,

@@ -19,6 +19,6 @@ class BankCardsPageState extends State<BankCardsPage> {
 
     @override
     Widget build(BuildContext context) => Center(
-        child: const Text('bank cards here'),
+        child: const Text('Not implemented yet\nWait for updates', textAlign: TextAlign.center),
     );
 }

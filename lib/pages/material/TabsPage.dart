@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:passwords/constants.dart';
-import 'package:provider/provider.dart';
 import 'package:passwords/PwdIcons.dart';
-import 'package:passwords/model/AppStateModel.dart';
+import 'package:passwords/pages/material/InfoPage.dart';
 import 'package:passwords/pages/material/LoginsPage.dart';
 import 'package:passwords/pages/material/BankCardsPage.dart';
 import 'package:passwords/pages/material/DocumentsPage.dart';
 import 'package:passwords/pages/material/SettingsPage.dart';
-import 'package:passwords/pages/material/AddLoginPage.dart';
+import 'package:passwords/pages/material/LoginFormPage.dart';
 
 class TabsPage extends StatefulWidget {
     @override
@@ -26,18 +25,6 @@ class TabsPageState extends State<TabsPage> {
         );
     }
 
-    Widget buildBody() => Consumer<AppStateModel>(
-        builder: (context, model, consumer) {
-            switch (bottomNavBarCurrentIndex) {
-                case 0: return LoginsPage();
-                case 1: return BankCardsPage();
-                case 2: return DocumentsPage();
-                case 3: return SettingsPage();
-                default: return null;
-            }
-        }
-    );
-
     Widget buildAppBar() {
         switch (bottomNavBarCurrentIndex) {
             case 0: return buildLoginsAppBar();
@@ -48,11 +35,22 @@ class TabsPageState extends State<TabsPage> {
         }
     }
 
+    Widget buildBody() {
+        switch (bottomNavBarCurrentIndex) {
+            case 0: return LoginsPage();
+            case 1: return BankCardsPage();
+            case 2: return DocumentsPage();
+            case 3: return SettingsPage();
+            default: return null;
+        }
+    }
+
     Widget buildLoginsAppBar() => AppBar(
         title: const Text('Logins'),
         actions: [
             IconButton(
-                icon: Icon(Icons.add),
+                tooltip: 'Create',
+                icon: const Icon(Icons.add, size: 26),
                 onPressed: () => gotoAddLoginPage(context),
             ),
         ],
@@ -104,7 +102,15 @@ class TabsPageState extends State<TabsPage> {
     void gotoAddLoginPage(BuildContext context) {
         Navigator.of(context).push(
             MaterialPageRoute(
-                builder: (context) => AddLoginPage(),
+                builder: (context) => LoginFormPage(item: null),
+            ),
+        );
+    }
+
+    void gotoInfoPage(BuildContext context) {
+        Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (context) => InfoPage(),
             ),
         );
     }

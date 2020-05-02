@@ -19,6 +19,6 @@ class DocumentsPageState extends State<DocumentsPage> {
 
     @override
     Widget build(BuildContext context) => Center(
-        child: const Text('docs here'),
+        child: const Text('Not implemented yet\nWait for updates', textAlign: TextAlign.center),
     );
 }
