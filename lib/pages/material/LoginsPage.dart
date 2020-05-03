@@ -33,6 +33,10 @@ class LoginsPageState extends BasePageState<LoginsPage> {
 
         onSearch = (String searchText) =>
             searchDebouncer.run(() => onSearchInstant(searchText));
+
+        if (model.loginsFilter.length > 0) {
+            onSearchInstant('');
+        }
     }
 
     @override
@@ -65,8 +69,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                         isSearching = false;
                     });
 
-                    AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
-                    model.onLoginSearch('');
+                    onSearchInstant('');
                 },
             );
         }
