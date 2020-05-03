@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:passwords/helpers/Debouncer.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:passwords/model/Login.dart';
 import 'package:passwords/pages/material/BasePage.dart';
 import 'package:passwords/pages/material/LoginFormPage.dart';
-import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 
 class LoginsPage extends StatefulWidget {
@@ -13,6 +14,12 @@ class LoginsPage extends StatefulWidget {
 }
 
 class LoginsPageState extends BasePageState<LoginsPage> {
+    final searchDebouncer = Debouncer(milliseconds: 500);
+    Function onSearch;
+    bool isSearching = false;
+    TextEditingController searchController = TextEditingController();
+    FocusNode searchFocus = FocusNode();
+
     @override
     void initState() {
         super.initState();
@@ -20,10 +27,101 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
 
         model.initLogins();
+
+        onSearch = (String searchText) =>
+            searchDebouncer.run(() =>
+                model.onLoginSearch(searchText));
     }
 
     @override
-    Widget build(BuildContext context) => Consumer<AppStateModel>(
+    Widget build(BuildContext context) => Scaffold(
+        appBar: buildAppBar(),
+        body: buildBody(),
+    );
+
+    Widget buildAppBar() => AppBar(
+        leading: buildAppBarLeading(),
+        title: buildAppBarTitle(),
+        actions: buildAppBarActions(),
+    );
+
+    Widget buildAppBarLeading() {
+        if (!isSearching) {
+            return IconButton(
+                color: Colors.white,
+                onPressed: () => setState(() {
+                    isSearching = true;
+                }),
+                tooltip: 'Search',
+                icon: const Icon(Icons.search, size: 26),
+            );
+        } else {
+            return BackButton(
+                onPressed: () {
+                    setState(() {
+                        isSearching = false;
+                    });
+
+                    searchController.text = '';
+
+                    AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+                    model.onLoginSearch('');
+                },
+            );
+        }
+    }
+
+    Widget buildAppBarTitle() {
+        if (!isSearching) {
+            return const Text('Logins');
+        } else {
+            return TextFormField(
+                controller: searchController,
+                focusNode: searchFocus,
+                decoration: const InputDecoration(
+                    hintText: 'Search',
+                    hintStyle: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 20,
+                    ),
+                    hasFloatingPlaceholder: false,
+                    isDense: false,
+                    border: InputBorder.none,
+                ),
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.search,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                ),
+                autocorrect: false,
+                enableSuggestions: false,
+                onChanged: onSearch,
+                onFieldSubmitted: onSearch,
+                cursorColor: Colors.white,
+                enableInteractiveSelection: false,
+                autofocus: true,
+            );
+        }
+    }
+
+    List<Widget> buildAppBarActions() {
+        if (isSearching) {
+            return null;
+        } else {
+            return [
+                IconButton(
+                    color: Colors.white,
+                    onPressed: () => gotoAddLoginPage(context),
+                    tooltip: 'Create',
+                    icon: const Icon(Icons.add, size: 26),
+                ),
+            ];
+        }
+    }
+
+    Widget buildBody() => Consumer<AppStateModel>(
         builder: (context, model, consumer) {
             if (!model.loginsInited) {
                 return buildBodyLoading();
@@ -120,6 +218,14 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         Navigator.of(context).push(
             MaterialPageRoute(
                 builder: (context) => LoginFormPage(item: item),
+            ),
+        );
+    }
+
+    void gotoAddLoginPage(BuildContext context) {
+        Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (context) => LoginFormPage(item: null),
             ),
         );
     }

@@ -5,6 +5,7 @@ import 'package:passwords/model/Login.dart';
 class LoginsRepository {
     final FlutterSecureStorage storage;
     Map<String, Login> items;
+    Map<String, String> search = {};
     Map<String, dynamic> settings = {};
     String storageItemKeyPrefix = 'Login.';
     String storageSettingsKey = 'Login:Settings';
@@ -25,6 +26,45 @@ class LoginsRepository {
                 settings = json.decode(kvs[key]);
             }
         }
+
+        buildSearch(null);
+    }
+
+    void buildSearch(String id) {
+        final currentItem = items[id];
+
+        if (id == null) { // rebuild all
+            search = {};
+            items.forEach((id, item) {
+                search[id] = buildSearchForItem(item);
+            });
+        } else if (currentItem != null) { // rebuild item
+            search[id] = buildSearchForItem(currentItem);
+        } else { // delete item
+            search.remove(id);
+        }
+    }
+
+    String buildSearchForItem(Login item) {
+        String search = '';
+
+        search += item.title.toLowerCase() + ' ';
+        search += item.login.toLowerCase() + ' ';
+        search += item.website.toLowerCase() + ' ';
+
+        if (item.secretQuestions.length > 0) {
+            item.secretQuestions.forEach((question) {
+                search += question.toLowerCase() + ' ';
+            });
+        }
+
+        if (item.secretQuestionsAnswers.length > 0) {
+            item.secretQuestionsAnswers.forEach((answer) {
+                search += answer.toLowerCase() + ' ';
+            });
+        }
+
+        return search;
     }
 
     Login getItemById(String id) {
@@ -38,6 +78,8 @@ class LoginsRepository {
         await storage.write(key: key, value: value);
 
         items[item.id] = item;
+
+        buildSearch(item.id);
     }
 
     Future<void> deleteItem(Login item) async {
@@ -46,6 +88,8 @@ class LoginsRepository {
         await storage.delete(key: key);
 
         items.remove(item.id);
+
+        buildSearch(item.id);
     }
 
     Future<void> saveSettings() async {

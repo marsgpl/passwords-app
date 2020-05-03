@@ -11,6 +11,8 @@ class AppStateModel extends foundation.ChangeNotifier {
     final BankCardsRepository bankCards = BankCardsRepository();
     final DocumentsRepository documents = DocumentsRepository();
 
+    final searchSplit = new RegExp('[ ,\n\r\t]+');
+
     bool loginsInited = false;
     bool bankCardsInited = false;
     bool documentsInited = false;
@@ -18,6 +20,10 @@ class AppStateModel extends foundation.ChangeNotifier {
     String loginsFilter = '';
     String bankCardsFilter = '';
     String documentsFilter = '';
+
+    List<String> loginsFilterChunks = [];
+    List<String> bankCardsFilterChunks = [];
+    List<String> documentsFilterChunks = [];
 
     List<String> loginsVisibleIds;
     List<String> bankCardsVisibleIds;
@@ -32,6 +38,36 @@ class AppStateModel extends foundation.ChangeNotifier {
         loginsInited &&
         loginsVisibleIds.length == 0 &&
         loginsFilter.length == 0;
+
+    void onLoginSearch(String searchText) {
+        loginsFilter = searchText.trim().toLowerCase();
+        loginsFilterChunks = loginsFilter.split(searchSplit);
+        filterLoginsVisibleIds();
+        notifyListeners();
+    }
+
+    void filterLoginsVisibleIds() {
+        final items = logins.items;
+        final itemsSearchBuffs = logins.search;
+
+        if (loginsFilter.length == 0) {
+            loginsVisibleIds = items.keys.toList();
+        } else if (loginsFilterChunks.length == 1) {
+            loginsVisibleIds = items.keys.where((itemId) =>
+                itemsSearchBuffs[itemId].contains(loginsFilter)).toList();
+        } else {
+            loginsVisibleIds = items.keys.where((itemId) {
+                final item = itemsSearchBuffs[itemId];
+                for (int i = 0, c = loginsFilterChunks.length; i < c; ++i) {
+                    if (!item.contains(loginsFilterChunks[i])) return false;
+                }
+                return true;
+            }).toList();
+        }
+
+        loginsVisibleIds.sort((id1, id2) =>
+            items[id1].compareTo(items[id2]));
+    }
 
     Future<void> addLogin(Login item) async {
         await logins.saveItem(item);
@@ -62,9 +98,7 @@ class AppStateModel extends foundation.ChangeNotifier {
 
         await logins.initAll();
 
-        loginsVisibleIds = logins.items.keys.toList();
-        loginsVisibleIds.sort((id1, id2) =>
-            logins.items[id1].compareTo(logins.items[id2]));
+        filterLoginsVisibleIds();
 
         loginsInited = true;
 
@@ -76,9 +110,7 @@ class AppStateModel extends foundation.ChangeNotifier {
 
         await bankCards.initAll();
 
-        bankCardsVisibleIds = bankCards.items.keys.toList();
-        bankCardsVisibleIds.sort((id1, id2) =>
-            bankCards.items[id1].compareTo(bankCards.items[id2]));
+        // filterBankCardsVisibleIds();
 
         bankCardsInited = true;
 
@@ -90,9 +122,7 @@ class AppStateModel extends foundation.ChangeNotifier {
 
         await documents.initAll();
 
-        documentsVisibleIds = documents.items.keys.toList();
-        documentsVisibleIds.sort((id1, id2) =>
-            documents.items[id1].compareTo(documents.items[id2]));
+        // filterDocumentsVisibleIds();
 
         documentsInited = true;
 

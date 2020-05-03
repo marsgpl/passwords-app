@@ -18,7 +18,33 @@ class BankCardsPageState extends State<BankCardsPage> {
     }
 
     @override
-    Widget build(BuildContext context) => Center(
-        child: const Text('Not implemented yet\nWait for updates', textAlign: TextAlign.center),
+    Widget build(BuildContext context) => Scaffold(
+        appBar: buildAppBar(),
+        body: buildBody(),
+    );
+
+    Widget buildAppBar() => AppBar(
+        title: const Text('Bank cards'),
+    );
+
+    Widget buildBody() => Consumer<AppStateModel>(
+        builder: (context, model, consumer) {
+            // if (!model.bankCardsInited) {
+            //     return buildBodyLoading();
+            // } else {
+                return buildBodyNotImplemented();
+            // }
+        }
+    );
+
+    Widget buildBodyLoading() => Center(
+        child: const CircularProgressIndicator(),
+    );
+
+    Widget buildBodyNotImplemented() => Center(
+        child: const Text(
+            'Not implemented yet\nWait for updates',
+            textAlign: TextAlign.center,
+        ),
     );
 }

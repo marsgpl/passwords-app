@@ -122,6 +122,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         ));
 
         return ListView(
+            semanticChildCount: children.length,
             padding: const EdgeInsets.all(14),
             children: children,
         );
@@ -301,6 +302,8 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         enableSuggestions: false,
         minLines: 1,
         maxLines: 3,
+        textInputAction: TextInputAction.done,
+        onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
     );
 
     Widget loginField() => TextFormField(
@@ -319,6 +322,8 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         enableSuggestions: false,
         minLines: 1,
         maxLines: 3,
+        textInputAction: TextInputAction.done,
+        onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
     );
 
     Widget passwordField() => TextFormField(
@@ -337,6 +342,8 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         enableSuggestions: false,
         minLines: 1,
         maxLines: 3,
+        textInputAction: TextInputAction.done,
+        onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
         // replace letters with dots:
         // obscureText: true,
     );
@@ -358,6 +365,8 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             enableSuggestions: false,
             minLines: 1,
             maxLines: 3,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
         );
 
         return Stack(
@@ -386,6 +395,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         enableSuggestions: false,
         minLines: 1,
         maxLines: 3,
+        textInputAction: TextInputAction.newline,
     );
 
     Widget secretQuestionField(int index, bool isLast) {
@@ -405,6 +415,8 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             enableSuggestions: false,
             minLines: 1,
             maxLines: 3,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
         );
 
         if (!isLast) {
@@ -438,6 +450,8 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             enableSuggestions: false,
             minLines: 1,
             maxLines: 3,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
         );
 
         if (!isLast) {

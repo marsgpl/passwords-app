@@ -2,14 +2,24 @@ import 'package:flutter/material.dart';
 
 class SettingsPage extends StatelessWidget {
     @override
-    Widget build(BuildContext context) => ListView(
+    Widget build(BuildContext context) => Scaffold(
+        appBar: buildAppBar(),
+        body: buildBody(),
+    );
+
+    Widget buildAppBar() => AppBar(
+        title: const Text('Settings & info'),
+    );
+
+    Widget buildBody() => ListView(
+        semanticChildCount: 1,
         children: [
-            proTip(),
-            Image(image: new AssetImage('assets/swipe.gif')),
+            howToUseRow(),
+            const Image(image: AssetImage('assets/swipe.gif')),
         ],
     );
 
-    Widget proTip() => ListTile(
-        title: const Text('How to use:'),
+    Widget howToUseRow() => const ListTile(
+        title: const Text('How to copy password:'),
     );
 }
