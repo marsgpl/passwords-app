@@ -14,7 +14,7 @@ class LoginsPage extends StatefulWidget {
 }
 
 class LoginsPageState extends BasePageState<LoginsPage> {
-    final searchDebouncer = Debouncer(milliseconds: 500);
+    final searchDebouncer = Debouncer(milliseconds: 200);
     Function onSearch;
     Function onSearchInstant;
     bool isSearching = false;
