@@ -90,6 +90,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                     border: InputBorder.none,
                 ),
                 keyboardType: TextInputType.text,
+                keyboardAppearance: Brightness.light,
                 textInputAction: TextInputAction.search,
                 style: const TextStyle(
                     color: Colors.white,

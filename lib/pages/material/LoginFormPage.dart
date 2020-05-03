@@ -342,6 +342,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         ),
         style: const TextStyle(fontSize: 18),
         keyboardType: TextInputType.text,
+        keyboardAppearance: Brightness.light,
         autocorrect: false,
         enableSuggestions: false,
         minLines: 1,
@@ -362,6 +363,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         ),
         style: const TextStyle(fontSize: 18),
         keyboardType: TextInputType.emailAddress,
+        keyboardAppearance: Brightness.light,
         autocorrect: false,
         enableSuggestions: false,
         minLines: 1,
@@ -383,6 +385,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             ),
             style: const TextStyle(fontSize: 18),
             keyboardType: TextInputType.visiblePassword,
+            keyboardAppearance: Brightness.light,
             autocorrect: false,
             enableSuggestions: false,
             minLines: 1,
@@ -407,7 +410,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             child: ButtonBar(
                 alignment: MainAxisAlignment.spaceBetween,
                 mainAxisSize: MainAxisSize.max,
-                buttonPadding: EdgeInsets.all(5),
+                buttonPadding: const EdgeInsets.all(5),
                 children: [
                     FlatButton.icon(
                         key: Key('GeneratePassword'),
@@ -426,6 +429,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
                         onPressed: () {
                             Clipboard.setData(ClipboardData(text: passwordController.text));
                             snack(message: 'Password copied', context: context);
+                            FocusScope.of(context).unfocus();
                         },
                     ),
                 ],
@@ -460,6 +464,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             ),
             style: const TextStyle(fontSize: 18),
             keyboardType: TextInputType.url,
+            keyboardAppearance: Brightness.light,
             autocorrect: false,
             enableSuggestions: false,
             minLines: 1,
@@ -496,6 +501,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         ),
         style: const TextStyle(fontSize: 18),
         keyboardType: TextInputType.text,
+        keyboardAppearance: Brightness.light,
         autocorrect: false,
         enableSuggestions: false,
         minLines: 1,
@@ -518,6 +524,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             ),
             style: const TextStyle(fontSize: 18),
             keyboardType: TextInputType.text,
+            keyboardAppearance: Brightness.light,
             autocorrect: false,
             enableSuggestions: false,
             minLines: 1,
@@ -552,6 +559,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         ),
         style: const TextStyle(fontSize: 18),
         keyboardType: TextInputType.text,
+        keyboardAppearance: Brightness.light,
         autocorrect: false,
         enableSuggestions: false,
         minLines: 1,
