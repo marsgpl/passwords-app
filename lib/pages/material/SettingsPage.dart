@@ -15,11 +15,15 @@ class SettingsPage extends StatelessWidget {
         semanticChildCount: 1,
         children: [
             howToUseRow(),
-            const Image(image: AssetImage('assets/swipe.gif')),
+            const Image(
+                key: Key('HowToUseImg'),
+                image: AssetImage('assets/swipe.gif'),
+            ),
         ],
     );
 
     Widget howToUseRow() => const ListTile(
+        key: Key('HowToUse'),
         title: const Text('How to copy password:'),
     );
 }

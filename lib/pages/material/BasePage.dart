@@ -26,10 +26,10 @@ class BasePageState<T extends StatefulWidget> extends State<T> {
     }
 
     void snack({
+        BuildContext context,
         String message,
     }) {
-        Scaffold.of(context).showSnackBar(
-            SnackBar(content: Text(message)));
+        Scaffold.of(context ?? this.context).showSnackBar(SnackBar(content: Text(message)));
     }
 
     Future<void> alert({

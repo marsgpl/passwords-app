@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:passwords/helpers/generateRandomPassword.dart';
+import 'package:provider/provider.dart';
 import 'package:passwords/constants.dart';
 import 'package:passwords/helpers/capitalize.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/model/Login.dart';
 import 'package:passwords/pages/material/BasePage.dart';
-import 'package:provider/provider.dart';
+
+const INPUT_ROW_HEIGHT = 76.5;
+const LIST_PADDING = 14.0;
 
 const SECRET_QUESTIONS_EXAMPLES = [
     'Mother\'s maiden name?',
@@ -41,17 +45,36 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
     List<TextEditingController> secretQuestionsControllers = [];
     List<TextEditingController> secretQuestionsAnswersControllers = [];
 
-    FocusNode titleFocus = FocusNode();
-    FocusNode loginFocus = FocusNode();
-    FocusNode passwordFocus = FocusNode();
-    FocusNode websiteFocus = FocusNode();
-    FocusNode backup2faCodesFocus = FocusNode();
+    FocusNode titleFocus;
+    FocusNode loginFocus;
+    FocusNode passwordFocus;
+    FocusNode websiteFocus;
+    FocusNode backup2faCodesFocus;
     List<FocusNode> secretQuestionsFocuses = [];
     List<FocusNode> secretQuestionsAnswersFocuses = [];
+
+    bool isPasswordFocused = false;
+    double viewportWidth;
+
+    double getViewportWidth() {
+        if (viewportWidth == null) {
+            viewportWidth = MediaQuery.of(context).size.width;
+        }
+
+        return viewportWidth;
+    }
 
     @override
     void initState() {
         super.initState();
+
+        titleFocus = FocusNode();
+        loginFocus = FocusNode();
+        passwordFocus = FocusNode();
+        websiteFocus = FocusNode();
+        backup2faCodesFocus = FocusNode();
+
+        passwordFocus.addListener(onPasswordFocusChange);
 
         Login item = widget.item;
 
@@ -81,10 +104,20 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         }
     }
 
+    void onPasswordFocusChange() {
+        if (isPasswordFocused != passwordFocus.hasFocus) {
+            setState(() {
+                isPasswordFocused = passwordFocus.hasFocus;
+            });
+        }
+    }
+
     @override
     Widget build(BuildContext context) => Scaffold(
         appBar: buildAppBar(),
-        body: buildBody(),
+        body: Builder(
+            builder: (context) => buildBody(context),
+        ),
     );
 
     Widget buildAppBar() => AppBar(
@@ -93,19 +126,30 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             const Text('Edit login'),
     );
 
-    Widget buildBody() {
+    Widget buildBody(BuildContext context) {
         List<Widget> children = [];
 
         children.add(titleField());
         children.add(loginField());
-        children.add(passwordField());
-        children.add(websiteField());
+
+        children.add(Container(
+            key: Key('PasswordWebsiteRowHack'),
+            height: INPUT_ROW_HEIGHT * 2,
+            child: Stack(
+                children: [
+                    websiteField(),
+                    passwordField(context),
+                ],
+            ),
+        ));
+
         children.add(backup2faCodesField());
 
         for (int index = 0; index < secretQuestionsControllers.length; ++index) {
             final isLast = index == secretQuestionsControllers.length - 1;
+
             children.add(secretQuestionField(index, isLast));
-            children.add(secretQuestionAnswerField(index, isLast));
+            children.add(secretQuestionAnswerField(index));
         }
 
         if (widget.item == null) {
@@ -116,14 +160,14 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
 
         children.add(moreActionsButton());
 
-        children.add(Padding(
+        children.add(Container(
             key: Key('ListBottomPad'),
-            padding: const EdgeInsets.only(top: 30),
+            height: 30,
         ));
 
         return ListView(
             semanticChildCount: children.length,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(LIST_PADDING),
             children: children,
         );
     }
@@ -326,27 +370,82 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
     );
 
-    Widget passwordField() => TextFormField(
-        key: Key('PasswordField'),
-        controller: passwordController,
-        focusNode: passwordFocus,
-        decoration: InputDecoration(
-            labelText: 'Password',
-            hasFloatingPlaceholder: true,
-            counter: fieldCounter('Generate', false),
-            contentPadding: fieldPadding(false),
-        ),
-        style: const TextStyle(fontSize: 18),
-        keyboardType: TextInputType.visiblePassword,
-        autocorrect: false,
-        enableSuggestions: false,
-        minLines: 1,
-        maxLines: 3,
-        textInputAction: TextInputAction.done,
-        onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
-        // replace letters with dots:
-        // obscureText: true,
-    );
+    Widget passwordField(BuildContext context) {
+        final input = TextFormField(
+            key: Key('PasswordField'),
+            controller: passwordController,
+            focusNode: passwordFocus,
+            decoration: InputDecoration(
+                labelText: 'Password',
+                hasFloatingPlaceholder: true,
+                counter: fieldCounter('Use unique passwords', false),
+                contentPadding: fieldPadding(false),
+            ),
+            style: const TextStyle(fontSize: 18),
+            keyboardType: TextInputType.visiblePassword,
+            autocorrect: false,
+            enableSuggestions: false,
+            minLines: 1,
+            maxLines: 3,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
+            // replace letters with dots:
+            // obscureText: true,
+        );
+
+        final passwordGeneratorPanel = isPasswordFocused ? Container(
+            key: Key('PasswordGeneratorField'),
+            transform: Matrix4.translationValues(0, 57, 0),
+            decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                    width: .5,
+                    color: Colors.grey,
+                ),
+                borderRadius: BorderRadius.circular(4),
+            ),
+            child: ButtonBar(
+                alignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                buttonPadding: EdgeInsets.all(5),
+                children: [
+                    FlatButton.icon(
+                        key: Key('GeneratePassword'),
+                        padding: const EdgeInsets.all(13),
+                        label: const Text('Generate'),
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () => setState(() {
+                            passwordController.text = generateRandomPassword();
+                        }),
+                    ),
+                    FlatButton.icon(
+                        key: Key('CopyPassword'),
+                        padding: const EdgeInsets.all(13),
+                        label: const Text('Copy'),
+                        icon: const Icon(Icons.content_copy),
+                        onPressed: () {
+                            Clipboard.setData(ClipboardData(text: passwordController.text));
+                            snack(message: 'Password copied', context: context);
+                        },
+                    ),
+                ],
+            ),
+        ) : Container();
+
+        return Positioned(
+            key: Key('PasswordFieldRow'),
+            width: getViewportWidth() - LIST_PADDING * 2,
+            top: 0,
+            left: 0,
+            height: 153,
+            child: Stack(
+                children: [
+                    input,
+                    passwordGeneratorPanel,
+                ],
+            ),
+        );
+    }
 
     Widget websiteField() {
         final input = TextFormField(
@@ -369,13 +468,19 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
         );
 
-        return Stack(
-            key: Key('WebsiteRow'),
-            alignment: Alignment.topRight,
-            children: [
-                input,
-                openWebsiteButton(),
-            ],
+        return Positioned(
+            key: Key('WebsiteFieldRow'),
+            width: getViewportWidth() - LIST_PADDING * 2,
+            top: INPUT_ROW_HEIGHT,
+            left: 0,
+            height: INPUT_ROW_HEIGHT,
+            child: Stack(
+                alignment: Alignment.topRight,
+                children: [
+                    input,
+                    openWebsiteButton(),
+                ],
+            ),
         );
     }
 
@@ -395,7 +500,9 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         enableSuggestions: false,
         minLines: 1,
         maxLines: 3,
-        textInputAction: TextInputAction.newline,
+        // textInputAction: TextInputAction.newline,
+        textInputAction: TextInputAction.done,
+        onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
     );
 
     Widget secretQuestionField(int index, bool isLast) {
@@ -433,40 +540,25 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         }
     }
 
-    Widget secretQuestionAnswerField(int index, bool isLast) {
-        final input = TextFormField(
-            key: Key('SecretQuestionAnswerField $index'),
-            controller: secretQuestionsAnswersControllers[index],
-            focusNode: secretQuestionsAnswersFocuses[index],
-            decoration: InputDecoration(
-                labelText: 'Secret question\'s answer ${index + 1}',
-                hasFloatingPlaceholder: true,
-                counter: fieldCounter(SECRET_QUESTIONS_ANSWERS_EXAMPLES[index % 3], isLast),
-                contentPadding: fieldPadding(isLast),
-            ),
-            style: const TextStyle(fontSize: 18),
-            keyboardType: TextInputType.text,
-            autocorrect: false,
-            enableSuggestions: false,
-            minLines: 1,
-            maxLines: 3,
-            textInputAction: TextInputAction.done,
-            onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
-        );
-
-        if (!isLast) {
-            return input;
-        } else {
-            return Stack(
-                key: Key('SecretQuestionAnswerRow $index'),
-                alignment: Alignment.topRight,
-                children: [
-                    input,
-                    removeQaButton(),
-                ],
-            );
-        }
-    }
+    Widget secretQuestionAnswerField(int index) => TextFormField(
+        key: Key('SecretQuestionAnswerField $index'),
+        controller: secretQuestionsAnswersControllers[index],
+        focusNode: secretQuestionsAnswersFocuses[index],
+        decoration: InputDecoration(
+            labelText: 'Secret question\'s answer ${index + 1}',
+            hasFloatingPlaceholder: true,
+            counter: fieldCounter(SECRET_QUESTIONS_ANSWERS_EXAMPLES[index % 3], false),
+            contentPadding: fieldPadding(false),
+        ),
+        style: const TextStyle(fontSize: 18),
+        keyboardType: TextInputType.text,
+        autocorrect: false,
+        enableSuggestions: false,
+        minLines: 1,
+        maxLines: 3,
+        textInputAction: TextInputAction.done,
+        onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
+    );
 
     Widget fieldCounter(String text, bool withSuffixButton) => Container(
         transform: Matrix4.translationValues(withSuffixButton ? 42 : 2, -4, 0),
@@ -478,6 +570,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         const EdgeInsets.fromLTRB(2, 8, 2, 8);
 
     Widget removeQaButton() => Padding(
+        key: Key('RemoveQaButton'),
         padding: const EdgeInsets.only(top: 5),
         child: IconButton(
             color: Colors.black87,
@@ -488,6 +581,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
     );
 
     Widget openWebsiteButton() => Padding(
+        key: Key('OpenWebsiteButton'),
         padding: const EdgeInsets.only(top: 5),
         child: IconButton(
             color: Colors.black87,

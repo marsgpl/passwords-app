@@ -16,6 +16,7 @@ class LoginsPage extends StatefulWidget {
 class LoginsPageState extends BasePageState<LoginsPage> {
     final searchDebouncer = Debouncer(milliseconds: 500);
     Function onSearch;
+    Function onSearchInstant;
     bool isSearching = false;
     TextEditingController searchController = TextEditingController();
     FocusNode searchFocus = FocusNode();
@@ -28,9 +29,10 @@ class LoginsPageState extends BasePageState<LoginsPage> {
 
         model.initLogins();
 
+        onSearchInstant = model.onLoginSearch;
+
         onSearch = (String searchText) =>
-            searchDebouncer.run(() =>
-                model.onLoginSearch(searchText));
+            searchDebouncer.run(() => onSearchInstant(searchText));
     }
 
     @override
@@ -59,10 +61,9 @@ class LoginsPageState extends BasePageState<LoginsPage> {
             return BackButton(
                 onPressed: () {
                     setState(() {
+                        searchController.text = '';
                         isSearching = false;
                     });
-
-                    searchController.text = '';
 
                     AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
                     model.onLoginSearch('');
@@ -98,7 +99,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                 autocorrect: false,
                 enableSuggestions: false,
                 onChanged: onSearch,
-                onFieldSubmitted: onSearch,
+                onFieldSubmitted: onSearchInstant,
                 cursorColor: Colors.white,
                 enableInteractiveSelection: false,
                 autofocus: true,
@@ -159,7 +160,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                             if (index >= rowsCount) {
                                 return null;
                             } else if (index.isOdd) {
-                                return Divider(
+                                return const Divider(
                                     height: .5,
                                     thickness: .5,
                                     indent: 0,
@@ -176,18 +177,19 @@ class LoginsPageState extends BasePageState<LoginsPage> {
     }
 
     Widget buildBodyItemsRow(Login item) => Slidable(
-        actionPane: SlidableDrawerActionPane(),
+        actionPane: const SlidableDrawerActionPane(),
         actionExtentRatio: 0.25,
         child: ListTile(
             key: Key(item.id),
             title: Text(item.title),
             subtitle: Text(item.login != null ? item.login : ''),
             trailing: const Icon(Icons.chevron_right),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
             onTap: () => gotoEditLoginPage(item),
         ),
         actions: [
             IconSlideAction(
+                key: Key('CopyLogin'),
                 caption: 'Copy login',
                 color: const Color(0xFF636E72),
                 foregroundColor: Colors.white,
@@ -195,6 +197,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                 onTap: () => copyLogin(item),
             ),
             IconSlideAction(
+                key: Key('CopyPassword'),
                 caption: 'Copy password',
                 color: const Color(0xFF2C3436),
                 foregroundColor: Colors.white,
