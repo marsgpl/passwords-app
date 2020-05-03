@@ -10,6 +10,7 @@ import 'package:passwords/pages/material/BasePage.dart';
 
 const INPUT_ROW_HEIGHT = 76.5;
 const LIST_PADDING = 14.0;
+const LIST_ITEM_TEXT_STYLE = const TextStyle(fontSize: 18);
 
 const SECRET_QUESTIONS_EXAMPLES = [
     'Mother\'s maiden name?',
@@ -54,6 +55,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
     List<FocusNode> secretQuestionsAnswersFocuses = [];
 
     bool isPasswordFocused = false;
+    bool isWebsiteEnabled = false;
     double viewportWidth;
 
     double getViewportWidth() {
@@ -73,8 +75,6 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         passwordFocus = FocusNode();
         websiteFocus = FocusNode();
         backup2faCodesFocus = FocusNode();
-
-        passwordFocus.addListener(onPasswordFocusChange);
 
         Login item = widget.item;
 
@@ -102,12 +102,29 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
                 secretQuestionsAnswersFocuses.add(FocusNode());
             }
         }
+
+        passwordFocus.addListener(onPasswordFocusChange);
+        websiteController.addListener(onWebsiteChange);
+
+        isWebsiteEnabled = websiteHasText();
     }
 
     void onPasswordFocusChange() {
         if (isPasswordFocused != passwordFocus.hasFocus) {
             setState(() {
                 isPasswordFocused = passwordFocus.hasFocus;
+            });
+        }
+    }
+
+    bool websiteHasText() => websiteController.text.trim().length > 0;
+
+    void onWebsiteChange() {
+        final isWebsiteEnabledCurrent = websiteHasText();
+
+        if (isWebsiteEnabled != isWebsiteEnabledCurrent) {
+            setState(() {
+                isWebsiteEnabled = isWebsiteEnabledCurrent;
             });
         }
     }
@@ -340,7 +357,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             counter: fieldCounter('Service name', false),
             contentPadding: fieldPadding(false),
         ),
-        style: const TextStyle(fontSize: 18),
+        style: LIST_ITEM_TEXT_STYLE,
         keyboardType: TextInputType.text,
         keyboardAppearance: Brightness.light,
         autocorrect: false,
@@ -361,7 +378,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             counter: fieldCounter('Username or email', false),
             contentPadding: fieldPadding(false),
         ),
-        style: const TextStyle(fontSize: 18),
+        style: LIST_ITEM_TEXT_STYLE,
         keyboardType: TextInputType.emailAddress,
         keyboardAppearance: Brightness.light,
         autocorrect: false,
@@ -383,7 +400,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
                 counter: fieldCounter('Use unique passwords', false),
                 contentPadding: fieldPadding(false),
             ),
-            style: const TextStyle(fontSize: 18),
+            style: LIST_ITEM_TEXT_STYLE,
             keyboardType: TextInputType.visiblePassword,
             keyboardAppearance: Brightness.light,
             autocorrect: false,
@@ -400,17 +417,14 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             key: Key('PasswordGeneratorField'),
             transform: Matrix4.translationValues(0, 57, 0),
             decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(
-                    width: .5,
-                    color: Colors.grey,
-                ),
+                color: const Color(0xEE282828),
+                // border: Border.all(width: .5, color: Colors.grey),
                 borderRadius: BorderRadius.circular(4),
             ),
             child: ButtonBar(
                 alignment: MainAxisAlignment.spaceBetween,
                 mainAxisSize: MainAxisSize.max,
-                buttonPadding: const EdgeInsets.all(5),
+                buttonPadding: EdgeInsets.zero,
                 children: [
                     FlatButton.icon(
                         key: Key('GeneratePassword'),
@@ -420,6 +434,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
                         onPressed: () => setState(() {
                             passwordController.text = generateRandomPassword();
                         }),
+                        textColor: Colors.white,
                     ),
                     FlatButton.icon(
                         key: Key('CopyPassword'),
@@ -431,6 +446,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
                             snack(message: 'Password copied', context: context);
                             FocusScope.of(context).unfocus();
                         },
+                        textColor: Colors.white,
                     ),
                 ],
             ),
@@ -462,7 +478,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
                 counter: fieldCounter('Service url, ex. google.com', true),
                 contentPadding: fieldPadding(true),
             ),
-            style: const TextStyle(fontSize: 18),
+            style: LIST_ITEM_TEXT_STYLE,
             keyboardType: TextInputType.url,
             keyboardAppearance: Brightness.light,
             autocorrect: false,
@@ -499,7 +515,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             counter: fieldCounter('If authenticator app is lost', false),
             contentPadding: fieldPadding(false),
         ),
-        style: const TextStyle(fontSize: 18),
+        style: LIST_ITEM_TEXT_STYLE,
         keyboardType: TextInputType.text,
         keyboardAppearance: Brightness.light,
         autocorrect: false,
@@ -522,7 +538,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
                 counter: fieldCounter(SECRET_QUESTIONS_EXAMPLES[index % 3], isLast),
                 contentPadding: fieldPadding(isLast),
             ),
-            style: const TextStyle(fontSize: 18),
+            style: LIST_ITEM_TEXT_STYLE,
             keyboardType: TextInputType.text,
             keyboardAppearance: Brightness.light,
             autocorrect: false,
@@ -557,7 +573,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             counter: fieldCounter(SECRET_QUESTIONS_ANSWERS_EXAMPLES[index % 3], false),
             contentPadding: fieldPadding(false),
         ),
-        style: const TextStyle(fontSize: 18),
+        style: LIST_ITEM_TEXT_STYLE,
         keyboardType: TextInputType.text,
         keyboardAppearance: Brightness.light,
         autocorrect: false,
@@ -581,7 +597,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         key: Key('RemoveQaButton'),
         padding: const EdgeInsets.only(top: 5),
         child: IconButton(
-            color: Colors.black87,
+            color: PRIMARY_COLOR,
             onPressed: removeLastQaRow,
             tooltip: 'Remove',
             icon: const Icon(Icons.close),
@@ -592,8 +608,12 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         key: Key('OpenWebsiteButton'),
         padding: const EdgeInsets.only(top: 5),
         child: IconButton(
-            color: Colors.black87,
-            onPressed: () => openUrl(websiteController.text.trim()),
+            color: isWebsiteEnabled ?
+                PRIMARY_COLOR :
+                Colors.black38,
+            onPressed: isWebsiteEnabled ?
+                () => openUrl(websiteController.text.trim()) :
+                null,
             tooltip: 'Open',
             icon: const Icon(Icons.open_in_new),
         ),
@@ -639,7 +659,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
 
     Widget moreActionsButton() => Padding(
         key: Key('MoreActionsButton'),
-        padding: const EdgeInsets.only(top: 5),
+        padding: const EdgeInsets.only(top: 8),
         child: FlatButton(
             padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 28),
             onPressed: showMoreActions,

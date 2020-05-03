@@ -55,29 +55,23 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         if (!isSearching) {
             return IconButton(
                 color: Colors.white,
-                onPressed: () => setState(() {
-                    isSearching = true;
-                }),
+                onPressed: openSearch,
                 tooltip: 'Search',
                 icon: const Icon(Icons.search, size: 26),
             );
         } else {
             return BackButton(
-                onPressed: () {
-                    setState(() {
-                        searchController.text = '';
-                        isSearching = false;
-                    });
-
-                    onSearchInstant('');
-                },
+                onPressed: closeSearch,
             );
         }
     }
 
     Widget buildAppBarTitle() {
         if (!isSearching) {
-            return const Text('Logins');
+            return GestureDetector(
+                onTap: openSearch,
+                child: const Text('Logins'),
+            );
         } else {
             return TextFormField(
                 controller: searchController,
@@ -111,9 +105,31 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         }
     }
 
+    void closeSearch() {
+        setState(() {
+            searchController.text = '';
+            isSearching = false;
+        });
+
+        onSearchInstant('');
+    }
+
+    void openSearch() {
+        setState(() {
+            isSearching = true;
+        });
+    }
+
     List<Widget> buildAppBarActions() {
         if (isSearching) {
-            return null;
+            return [
+                IconButton(
+                    color: Colors.white,
+                    onPressed: closeSearch,
+                    tooltip: 'Close',
+                    icon: const Icon(Icons.close, size: 26),
+                ),
+            ];
         } else {
             return [
                 IconButton(
@@ -188,7 +204,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
             title: Text(item.title),
             subtitle: Text(item.login != null ? item.login : ''),
             trailing: const Icon(Icons.chevron_right),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
             onTap: () => gotoEditLoginPage(item),
         ),
         actions: [
