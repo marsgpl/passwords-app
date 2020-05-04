@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:encrypt/encrypt.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:passwords/helpers/generateRandomPassword.dart';
 import 'package:passwords/helpers/reverse.dart';
@@ -24,6 +25,17 @@ class SettingsRepository {
         } else {
             await resetAndSave();
         }
+
+        await initBiometrics();
+    }
+
+    Future<void> initBiometrics() async {
+        LocalAuthentication localAuth = LocalAuthentication();
+        List<BiometricType> availableBiometrics = await localAuth.getAvailableBiometrics();
+
+        settings.localAuth = localAuth;
+        settings.isFaceIdSupported = availableBiometrics.contains(BiometricType.face);
+        settings.isTouchIdSupported = availableBiometrics.contains(BiometricType.fingerprint);
     }
 
     Future<void> save() async {
@@ -37,7 +49,7 @@ class SettingsRepository {
         settings = Settings();
 
         await save();
-        await initMasterkey();
+        await init();
     }
 
     Future<void> ensureDecoys() async {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/pages/material/BasePage.dart';
-import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
     @override
@@ -51,8 +51,9 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         }
 
         children.add(rowAbout());
-        children.add(rowResetSettings(model));
+        children.add(rowBiometrics(model));
         children.add(rowPasswordGeneratorStrength(model));
+        children.add(rowResetSettings(model));
         children.add(rowPurge(model));
 
         return ListView(
@@ -93,24 +94,21 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
     );
 
-    Widget rowPasswordGeneratorStrength(AppStateModel model) => ListTile(
-        key: Key('rowPasswordGeneratorStrength'),
-        leading: const Icon(Icons.enhanced_encryption),
-        title: const Text('Use special symbols in generated passwords?'),
-        trailing: Switch(
-            value: model.settings.settings.useSpecialSymbolsInGeneratedPasswords,
-            onChanged: (value) {
-                model.settings.settings.useSpecialSymbolsInGeneratedPasswords = value;
-                model.saveSettings();
-            },
-        ),
-        onTap: () {
-            model.settings.settings.useSpecialSymbolsInGeneratedPasswords =
-                !model.settings.settings.useSpecialSymbolsInGeneratedPasswords;
-            model.saveSettings();
-        },
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-    );
+    Widget rowPasswordGeneratorStrength(AppStateModel model) {
+        final isEnabled = model.settings.settings.useSpecialSymbolsInGeneratedPasswords;
+
+        return ListTile(
+            key: Key('rowPasswordGeneratorStrength'),
+            leading: const Icon(Icons.enhanced_encryption),
+            title: const Text('Use special symbols in generated passwords?'),
+            trailing: Switch(
+                value: isEnabled,
+                onChanged: (value) => setSettingSpecialSymbolsInPasswords(model, value),
+            ),
+            onTap: () => setSettingSpecialSymbolsInPasswords(model, !isEnabled),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+        );
+    }
 
     Widget rowPurge(AppStateModel model) => ListTile(
         key: Key('rowPurge'),
@@ -120,15 +118,71 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
     );
 
-    Future<void> hideHowToCopyPasswordTip(AppStateModel model) async {
-        model.settings.settings.howToCopyPasswordTipHidden = true;
-        await model.saveSettings();
+    Widget rowBiometrics(AppStateModel model) {
+        final settings = model.settings.settings;
+
+        if (settings.isFaceIdSupported) {
+            return rowBiometricsFaceId(model);
+        } else if (settings.isTouchIdSupported) {
+            return rowBiometricsTouchId(model);
+        } else {
+            return rowBiometricsNotSupported();
+        }
+    }
+
+    Widget rowBiometricsNotSupported() => ListTile(
+        key: Key('rowBiometricsNotSupported'),
+        leading: const Icon(Icons.fingerprint),
+        title: const Text('FaceId and TouchId are not supported on this device'),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+        enabled: false,
+    );
+
+    Widget rowBiometricsFaceId(AppStateModel model) {
+        final isEnabled = model.settings.settings.isFaceIdEnabled;
+
+        return ListTile(
+            key: Key('rowBiometricsFaceId'),
+            leading: const Icon(Icons.face),
+            title: isEnabled ?
+                const Text('Face ID is enabled') :
+                const Text('Enable Face ID?'),
+            subtitle: isEnabled ?
+                const Text('Tap to disable') :
+                const Text('On every time you open the app'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+            trailing: Switch(
+                value: isEnabled,
+                onChanged: (value) => setSettingIsFaceIdEnabled(model, value),
+            ),
+            onTap: () => setSettingIsFaceIdEnabled(model, !isEnabled),
+        );
+    }
+
+    Widget rowBiometricsTouchId(AppStateModel model) {
+        final isEnabled = model.settings.settings.isTouchIdEnabled;
+
+        return ListTile(
+            key: Key('rowBiometricsTouchId'),
+            leading: const Icon(Icons.fingerprint),
+            title: isEnabled ?
+                const Text('Touch ID is enabled') :
+                const Text('Enable Touch ID?'),
+            subtitle: isEnabled ?
+                const Text('Tap to disable') :
+                const Text('On every time you open the app'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+            trailing: Switch(
+                value: isEnabled,
+                onChanged: (value) => setSettingIsTouchIdEnabled(model, value),
+            ),
+            onTap: () => setSettingIsTouchIdEnabled(model, !isEnabled),
+        );
     }
 
     void resetSettings(AppStateModel model) => confirm(
         title: 'Reset UI settings?',
         message: 'Other sensitive data will remain unchanged',
-        isAcceptCritical: true,
         onAccept: () => resetSettingsConfirmed(model),
     );
 
@@ -138,17 +192,38 @@ class SettingsPageState extends BasePageState<SettingsPage> {
 
     void showAbout() => alert(
         title: 'Passwords',
-        message: 'All data is encrypted with strong symmetric cryptography (aes-256-cfb)',
+        message: 'All data is encrypted with strong symmetric cryptography (aes-256-cfb)\n\nBefore removal, data is replaced with random noise bytes to make it impossible to restore directly by scanning the storage with special tools',
     );
 
     void eraseAllData(AppStateModel model) => confirm(
         title: 'Warning: are you sure?',
-        message: 'All your saved passwords and other data will be permanently removed from this device',
+        message: 'All your saved logins, passwords, bank cards, documents, attached photos and UI settings will be permanently removed from this device\n\nMake sure you have a backup',
+        titleIsCritical: true,
         isAcceptCritical: true,
         onAccept: () => eraseAllDataConfirmed(model),
     );
 
     Future<void> eraseAllDataConfirmed(AppStateModel model) async {
         await model.eraseAllData();
+    }
+
+    Future<void> setSettingSpecialSymbolsInPasswords(AppStateModel model, bool newValue) async {
+        model.settings.settings.useSpecialSymbolsInGeneratedPasswords = newValue;
+        await model.saveSettings();
+    }
+
+    Future<void> setSettingIsFaceIdEnabled(AppStateModel model, bool newValue) async {
+        model.settings.settings.isFaceIdEnabled = newValue;
+        await model.saveSettings();
+    }
+
+    Future<void> setSettingIsTouchIdEnabled(AppStateModel model, bool newValue) async {
+        model.settings.settings.isTouchIdEnabled = newValue;
+        await model.saveSettings();
+    }
+
+    Future<void> hideHowToCopyPasswordTip(AppStateModel model) async {
+        model.settings.settings.howToCopyPasswordTipHidden = true;
+        await model.saveSettings();
     }
 }

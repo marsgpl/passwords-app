@@ -411,7 +411,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             autocorrect: false,
             enableSuggestions: false,
             minLines: 1,
-            maxLines: 3,
+            maxLines: 1,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
             // replace letters with dots:
@@ -465,7 +465,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             width: getViewportWidth() - LIST_PADDING * 2,
             top: 0,
             left: 0,
-            height: 153,
+            height: INPUT_ROW_HEIGHT * 2,
             child: Stack(
                 children: [
                     input,
@@ -492,7 +492,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             autocorrect: false,
             enableSuggestions: false,
             minLines: 1,
-            maxLines: 3,
+            maxLines: 1,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (String value) => FocusScope.of(context).unfocus(),
         );

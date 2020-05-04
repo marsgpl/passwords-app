@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:passwords/helpers/generateRandomPassword.dart';
 import 'package:passwords/model/Document.dart';
 import 'package:passwords/model/SettingsRepository.dart';
 
@@ -44,6 +45,7 @@ class DocumentsRepository {
     Future<void> deleteItem(Document item) async {
         String key = storageItemKeyPrefix + item.id;
 
+        await storage.write(key: key, value: generateRandomPassword(length: 128));
         await storage.delete(key: key);
 
         items.remove(item.id);

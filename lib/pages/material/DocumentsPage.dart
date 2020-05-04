@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:passwords/PwdIcons.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 
@@ -41,10 +42,19 @@ class DocumentsPageState extends State<DocumentsPage> {
         child: const CircularProgressIndicator(),
     );
 
-    Widget buildBodyNotImplemented() => const Center(
-        child: const Text(
-            'Not implemented yet\nWait for updates',
-            textAlign: TextAlign.center,
+    Widget buildBodyNotImplemented() => Center(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+                const Icon(PwdIcons.document, color: Colors.grey, size: 60),
+                Container(height: 10),
+                const Text('Documents',
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                ),
+                Container(height: 10),
+                const Text('Not implemented yet'),
+                const Text('Wait for updates'),
+            ],
         ),
     );
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' as foundation;
+import 'package:passwords/helpers/generateRandomPassword.dart';
 import 'package:passwords/model/Login.dart';
 import 'package:passwords/model/BankCard.dart';
 import 'package:passwords/model/Document.dart';
@@ -153,6 +154,18 @@ class AppStateModel extends foundation.ChangeNotifier {
             print('oops: settings.init: $error');
         });
 
+        final s = settings.settings;
+
+        if (s.isFaceIdSupported && s.isFaceIdEnabled) {
+            s.authenticated = await s.localAuth.authenticateWithBiometrics(
+                localizedReason: 'Auth required',
+            );
+        } else if (s.isTouchIdSupported && s.isTouchIdEnabled) {
+            s.authenticated = await s.localAuth.authenticateWithBiometrics(
+                localizedReason: 'Auth required',
+            );
+        }
+
         settingsInited = true;
 
         notifyListeners();
@@ -169,8 +182,23 @@ class AppStateModel extends foundation.ChangeNotifier {
     }
 
     Future<void> eraseAllData() async {
+        await eraseAllWithRandom();
         await settings.storage.deleteAll();
+        await reinitAll();
+    }
 
+    Future<void> eraseAllWithRandom() async {
+        Map<String, String> kvs = await settings.storage.readAll();
+
+        for (String key in kvs.keys) {
+            await settings.storage.write(
+                key: key,
+                value: generateRandomPassword(length: kvs[key].length),
+            );
+        }
+    }
+
+    Future<void> reinitAll() async {
         loginsInited = false;
         bankCardsInited = false;
         documentsInited = false;

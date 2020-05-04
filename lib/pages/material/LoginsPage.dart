@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:passwords/helpers/Debouncer.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:provider/provider.dart';
+import 'package:passwords/helpers/NewItemArrowPainter.dart';
+import 'package:passwords/helpers/Debouncer.dart';
 import 'package:passwords/model/Login.dart';
 import 'package:passwords/pages/material/BasePage.dart';
 import 'package:passwords/pages/material/LoginFormPage.dart';
@@ -165,8 +166,25 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         child: const Text('Nothing found'),
     );
 
-    Widget buildBodyNoItems() => const Center(
-        child: const Text('No logins yet'),
+    Widget buildBodyNoItems() => Stack(
+        alignment: AlignmentDirectional.topEnd,
+        children: [
+            FractionallySizedBox(
+                widthFactor: 0.5,
+                heightFactor: 0.5,
+                child: Container(
+                    child: CustomPaint(
+                        painter: NewItemArrowPainter(),
+                    ),
+                ),
+            ),
+            Center(
+                child: const Text(
+                    'Add new login by tapping +\nin upper right corner',
+                    textAlign: TextAlign.center,
+                ),
+            ),
+        ],
     );
 
     Widget buildBodyItems(List<String> ids, Map<String, Login> items) {

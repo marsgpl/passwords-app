@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:passwords/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BasePageState<T extends StatefulWidget> extends State<T> {
@@ -61,11 +62,13 @@ class BasePageState<T extends StatefulWidget> extends State<T> {
         Function onRefuse,
         bool isAcceptCritical = false,
         bool isRefuseCritical = false,
+        bool titleIsCritical = false,
     }) {
         return showDialog<void>(
             context: context,
             builder: (BuildContext context) => AlertDialog(
-                title: Text(title),
+                title: Text(title, style: !titleIsCritical ? null :
+                    const TextStyle(color: Colors.red)),
                 content: Text(message),
                 actions: <Widget>[
                     FlatButton(
@@ -82,7 +85,7 @@ class BasePageState<T extends StatefulWidget> extends State<T> {
                         child: Text(acceptText),
                         textColor: isAcceptCritical ?
                             Colors.red :
-                            Colors.black87,
+                            PRIMARY_COLOR,
                         onPressed: () {
                             Navigator.of(context).pop();
                             if (onAccept != null) onAccept();
