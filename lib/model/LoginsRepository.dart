@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:passwords/model/Login.dart';
+import 'package:passwords/model/SettingsRepository.dart';
 
 class LoginsRepository {
     final FlutterSecureStorage storage;
     Map<String, Login> items;
     Map<String, String> search = {};
-    Map<String, dynamic> settings = {};
     String storageItemKeyPrefix = 'Login.';
-    String storageSettingsKey = 'Login:Settings';
+    SettingsRepository settings;
 
     LoginsRepository():
         storage = FlutterSecureStorage();
@@ -19,11 +19,15 @@ class LoginsRepository {
         Map<String, String> kvs = await storage.readAll();
 
         for (String key in kvs.keys) {
-            if (key.substring(0, storageItemKeyPrefix.length) == storageItemKeyPrefix) {
-                Login item = Login.fromJson(json.decode(kvs[key]));
-                items[item.id] = item;
-            } else if (key == storageSettingsKey) {
-                settings = json.decode(kvs[key]);
+            if (key.length > storageItemKeyPrefix.length &&
+                key.substring(0, storageItemKeyPrefix.length) == storageItemKeyPrefix
+            ) {
+                try {
+                    Login item = Login.fromJson(json.decode(settings.decrypt(kvs[key])));
+                    items[item.id] = item;
+                } catch(error) {
+                    print('oops: $error');
+                }
             }
         }
 
@@ -73,7 +77,7 @@ class LoginsRepository {
 
     Future<void> saveItem(Login item) async {
         String key = storageItemKeyPrefix + item.id;
-        String value = json.encode(item.toJson());
+        String value = settings.encrypt(json.encode(item.toJson()));
 
         await storage.write(key: key, value: value);
 
@@ -90,12 +94,5 @@ class LoginsRepository {
         items.remove(item.id);
 
         buildSearch(item.id);
-    }
-
-    Future<void> saveSettings() async {
-        await storage.write(
-            key: storageSettingsKey,
-            value: json.encode(settings),
-        );
     }
 }

@@ -122,14 +122,15 @@ class LoginsPageState extends BasePageState<LoginsPage> {
 
     List<Widget> buildAppBarActions() {
         if (isSearching) {
-            return [
-                IconButton(
-                    color: Colors.white,
-                    onPressed: closeSearch,
-                    tooltip: 'Close',
-                    icon: const Icon(Icons.close, size: 26),
-                ),
-            ];
+            return null;
+            // return [
+            //     IconButton(
+            //         color: Colors.white,
+            //         onPressed: closeSearch,
+            //         tooltip: 'Close',
+            //         icon: const Icon(Icons.close, size: 26),
+            //     ),
+            // ];
         } else {
             return [
                 IconButton(
@@ -156,15 +157,15 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         }
     );
 
-    Widget buildBodyLoading() => Center(
+    Widget buildBodyLoading() => const Center(
         child: const CircularProgressIndicator(),
     );
 
-    Widget buildBodyNotFoundBySearch() => Center(
+    Widget buildBodyNotFoundBySearch() => const Center(
         child: const Text('Nothing found'),
     );
 
-    Widget buildBodyNoItems() => Center(
+    Widget buildBodyNoItems() => const Center(
         child: const Text('No logins yet'),
     );
 
@@ -204,7 +205,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
             title: Text(item.title),
             subtitle: Text(item.login != null ? item.login : ''),
             trailing: const Icon(Icons.chevron_right),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            contentPadding: const EdgeInsets.fromLTRB(18, 0, 12, 0),
             onTap: () => gotoEditLoginPage(item),
         ),
         actions: [

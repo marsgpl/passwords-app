@@ -6,6 +6,7 @@
 
 ## Deps
 
+    pub global active encrypt
     pod setup
     flutter pub get
 

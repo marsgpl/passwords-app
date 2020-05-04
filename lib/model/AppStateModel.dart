@@ -5,17 +5,20 @@ import 'package:passwords/model/Document.dart';
 import 'package:passwords/model/LoginsRepository.dart';
 import 'package:passwords/model/BankCardsRepository.dart';
 import 'package:passwords/model/DocumentsRepository.dart';
+import 'package:passwords/model/SettingsRepository.dart';
 
 class AppStateModel extends foundation.ChangeNotifier {
+    final searchSplit = new RegExp('[ ,\n\r\t]+');
+
     final LoginsRepository logins = LoginsRepository();
     final BankCardsRepository bankCards = BankCardsRepository();
     final DocumentsRepository documents = DocumentsRepository();
-
-    final searchSplit = new RegExp('[ ,\n\r\t]+');
+    final SettingsRepository settings = SettingsRepository();
 
     bool loginsInited = false;
     bool bankCardsInited = false;
     bool documentsInited = false;
+    bool settingsInited = false;
 
     String loginsFilter = '';
     String bankCardsFilter = '';
@@ -96,7 +99,13 @@ class AppStateModel extends foundation.ChangeNotifier {
     Future<void> initLogins() async {
         if (loginsInited) return;
 
-        await logins.initAll();
+        await initSettings();
+
+        logins.settings = settings;
+
+        await logins.initAll().catchError((error) {
+            print('oops: logins.initAll: $error');
+        });
 
         filterLoginsVisibleIds();
 
@@ -108,9 +117,13 @@ class AppStateModel extends foundation.ChangeNotifier {
     Future<void> initBankCards() async {
         if (bankCardsInited) return;
 
-        await bankCards.initAll();
+        await initSettings();
 
-        // filterBankCardsVisibleIds();
+        bankCards.settings = settings;
+
+        await bankCards.initAll().catchError((error) {
+            print('oops: bankCards.initAll: $error');
+        });
 
         bankCardsInited = true;
 
@@ -120,24 +133,54 @@ class AppStateModel extends foundation.ChangeNotifier {
     Future<void> initDocuments() async {
         if (documentsInited) return;
 
-        await documents.initAll();
+        await initSettings();
 
-        // filterDocumentsVisibleIds();
+        documents.settings = settings;
+
+        await documents.initAll().catchError((error) {
+            print('oops: documents.initAll: $error');
+        });
 
         documentsInited = true;
 
         notifyListeners();
     }
 
-    Future<void> unlockBankCardsPage() async {
-        bankCards.settings['unlocked'] = true;
-        await bankCards.saveSettings();
+    Future<void> initSettings() async {
+        if (settingsInited) return;
+
+        await settings.init().catchError((error) {
+            print('oops: settings.init: $error');
+        });
+
+        settingsInited = true;
+
         notifyListeners();
     }
 
-    Future<void> unlockDocumentsPage() async {
-        documents.settings['unlocked'] = true;
-        await documents.saveSettings();
+    Future<void> saveSettings() async {
+        await settings.save();
+        notifyListeners();
+    }
+
+    Future<void> resetAndSaveSettings() async {
+        await settings.resetAndSave();
+        notifyListeners();
+    }
+
+    Future<void> eraseAllData() async {
+        await settings.storage.deleteAll();
+
+        loginsInited = false;
+        bankCardsInited = false;
+        documentsInited = false;
+        settingsInited = false;
+
+        await initLogins();
+        await initBankCards();
+        await initDocuments();
+        await initSettings();
+
         notifyListeners();
     }
 }

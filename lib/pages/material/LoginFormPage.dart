@@ -57,6 +57,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
     bool isPasswordFocused = false;
     bool isWebsiteEnabled = false;
     double viewportWidth;
+    bool useSpecialSymbolsInGeneratedPasswords;
 
     double getViewportWidth() {
         if (viewportWidth == null) {
@@ -107,6 +108,10 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         websiteController.addListener(onWebsiteChange);
 
         isWebsiteEnabled = websiteHasText();
+
+        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+        useSpecialSymbolsInGeneratedPasswords =
+            model.settings.settings.useSpecialSymbolsInGeneratedPasswords;
     }
 
     void onPasswordFocusChange() {
@@ -432,7 +437,10 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
                         label: const Text('Generate'),
                         icon: const Icon(Icons.refresh),
                         onPressed: () => setState(() {
-                            passwordController.text = generateRandomPassword();
+                            passwordController.text = generateRandomPassword(
+                                length: 20,
+                                useSpecialSymbols: useSpecialSymbolsInGeneratedPasswords,
+                            );
                         }),
                         textColor: Colors.white,
                     ),

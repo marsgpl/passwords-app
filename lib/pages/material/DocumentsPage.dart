@@ -37,11 +37,11 @@ class DocumentsPageState extends State<DocumentsPage> {
         }
     );
 
-    Widget buildBodyLoading() => Center(
+    Widget buildBodyLoading() => const Center(
         child: const CircularProgressIndicator(),
     );
 
-    Widget buildBodyNotImplemented() => Center(
+    Widget buildBodyNotImplemented() => const Center(
         child: const Text(
             'Not implemented yet\nWait for updates',
             textAlign: TextAlign.center,

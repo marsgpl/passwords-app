@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:passwords/model/BankCard.dart';
+import 'package:passwords/model/SettingsRepository.dart';
 
 class BankCardsRepository {
     final FlutterSecureStorage storage;
     Map<String, BankCard> items;
-    Map<String, dynamic> settings = {};
+    Map<String, String> search = {};
     String storageItemKeyPrefix = 'BankCard.';
-    String storageSettingsKey = 'BankCard:Settings';
+    SettingsRepository settings;
 
     BankCardsRepository():
         storage = FlutterSecureStorage();
@@ -18,18 +19,12 @@ class BankCardsRepository {
         Map<String, String> kvs = await storage.readAll();
 
         for (String key in kvs.keys) {
-            if (key.substring(0, storageItemKeyPrefix.length) == storageItemKeyPrefix) {
-                BankCard item = BankCard.fromJson(json.decode(kvs[key]));
+            if (key.length > storageItemKeyPrefix.length &&
+                key.substring(0, storageItemKeyPrefix.length) == storageItemKeyPrefix
+            ) {
+                BankCard item = BankCard.fromJson(json.decode(settings.decrypt(kvs[key])));
                 items[item.id] = item;
-            } else if (key == storageSettingsKey) {
-                settings = json.decode(kvs[key]);
             }
-        }
-
-        if (settings['unlocked'] != null) {
-            print('removing unlocked status: $storageSettingsKey');
-            settings.remove('unlocked');
-            await saveSettings();
         }
     }
 
@@ -39,7 +34,7 @@ class BankCardsRepository {
 
     Future<void> saveItem(BankCard item) async {
         String key = storageItemKeyPrefix + item.id;
-        String value = json.encode(item.toJson());
+        String value = settings.encrypt(json.encode(item.toJson()));
 
         await storage.write(key: key, value: value);
 
@@ -52,12 +47,5 @@ class BankCardsRepository {
         await storage.delete(key: key);
 
         items.remove(item.id);
-    }
-
-    Future<void> saveSettings() async {
-        await storage.write(
-            key: storageSettingsKey,
-            value: json.encode(settings),
-        );
     }
 }

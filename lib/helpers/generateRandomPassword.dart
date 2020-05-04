@@ -8,13 +8,23 @@ const CHARS = [
     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 ];
 
+const CHARS_WITH_SPECIAL = [
+    ...CHARS,
+    '!', '@', '#', '\$', '%', '^', '&', '*', '(', ')',
+    '_', '+', '=', '_', '~', '<', '>', '?', '/', '|',
+];
+
 const SEPS = [];
 
 String generateRandomPassword({
     int length = 20,
+    bool useSpecialSymbols = false,
 }) {
     final random = Random.secure();
 
-    return List.generate(length, (index) =>
-        CHARS[random.nextInt(CHARS.length)]).join('');
+    return useSpecialSymbols ?
+        List.generate(length, (index) =>
+            CHARS_WITH_SPECIAL[random.nextInt(CHARS_WITH_SPECIAL.length)]).join('') :
+        List.generate(length, (index) =>
+            CHARS[random.nextInt(CHARS.length)]).join('');
 }
