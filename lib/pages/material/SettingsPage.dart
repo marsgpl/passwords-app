@@ -57,6 +57,7 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         children.add(rowBiometrics(model));
         children.add(rowPasswordGeneratorStrength(model));
         children.add(rowDownloadBackup(model));
+        children.add(rowRestoreFromBackup(model));
         children.add(rowResetSettings(model));
         children.add(rowPurge(model));
 
@@ -190,27 +191,79 @@ class SettingsPageState extends BasePageState<SettingsPage> {
     Widget rowDownloadBackup(AppStateModel model) {
         return ListTile(
             key: Key('rowDownloadBackup'),
-            leading: const Icon(Icons.backup),
-            title: const Text('Download backup'),
-            subtitle: const Text('Encrypted backup file will contain all data'),
+            leading: const Icon(Icons.cloud_download),
+            title: const Text('Create backup file'),
+            subtitle: const Text('File contents will be encrypted'),
             contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
             onTap: () => downloadBackup(model),
         );
     }
 
+    Widget rowRestoreFromBackup(AppStateModel model) {
+        return ListTile(
+            key: Key('rowRestoreFromBackup'),
+            leading: const Icon(Icons.cloud_upload, color: Colors.red),
+            title: const Text('Restore from backup file', style: const TextStyle(color: Colors.red)),
+            subtitle: const Text('Warning: it will erase all current data'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+            onTap: () => restoreFromBackup(model),
+        );
+    }
+
+    Future<void> restoreFromBackup(AppStateModel model) => confirm(
+        title: 'Warning: are you sure?',
+        message: 'Imported backup will erase all your currently saved logins, bank cards, documents and settings',
+        titleIsCritical: true,
+        isAcceptCritical: true,
+        onAccept: () => restoreFromBackupConfirmed(model),
+    );
+
+    Future<void> restoreFromBackupConfirmed(AppStateModel model) async {
+        File bkpFile;
+
+        try {
+            final params = OpenFileDialogParams(
+                dialogType: OpenFileDialogType.document,
+            );
+            String bkpFilePath = await FlutterFileDialog.pickFile(params: params);
+            bkpFile = File(bkpFilePath);
+            String jsonEncoded = await bkpFile.readAsString();
+            await model.restoreFromBackup(jsonEncoded);
+            await model.reinitAll();
+            snack(message: 'Restored from backup');
+        } catch (error) {
+            if (bkpFile != null) {
+                alert(message: 'Something went wrong');
+                print('error: $error');
+            }
+        } finally {
+            if (bkpFile != null) {
+                await bkpFile.delete();
+            }
+        }
+    }
+
     Future<void> downloadBackup(AppStateModel model) async {
-        final tmpDir = await getTemporaryDirectory();
-        final bkpFileData = '{"a":123}';
-        final bkpFileName = 'backup.pwd';
-        final bkpFilePath = '${tmpDir.path}/$bkpFileName';
-        final bkpFile = File(bkpFilePath);
-        await bkpFile.writeAsString(bkpFileData);
+        try {
+            final tmpDir = await getTemporaryDirectory();
+            final bkpFileData = await model.dumpAllData();
+            final bkpFileName = 'passwords-backup.pb';
+            final bkpFilePath = '${tmpDir.path}/$bkpFileName';
+            final bkpFile = File(bkpFilePath);
+            await bkpFile.writeAsString(bkpFileData);
 
-        final params = SaveFileDialogParams(sourceFilePath: bkpFile.path);
-        final filePath = await FlutterFileDialog.saveFile(params: params);
-        print(filePath);
+            final params = SaveFileDialogParams(sourceFilePath: bkpFile.path);
+            String path = await FlutterFileDialog.saveFile(params: params);
 
-        await bkpFile.delete();
+            await bkpFile.delete();
+
+            if (path != null) {
+                snack(message: 'File saved');
+            }
+        } catch (error) {
+            alert(message: 'Something went wrong');
+            print('error: $error');
+        }
     }
 
     void resetSettings(AppStateModel model) => confirm(
@@ -225,10 +278,10 @@ class SettingsPageState extends BasePageState<SettingsPage> {
 
     void showAbout() => alert(
         title: 'Passwords',
-        message: 'All data is encrypted with strong symmetric cryptography (aes-256-cfb)\n\nBefore removal, data is replaced with random noise bytes to make it impossible to restore directly by scanning the storage with special tools',
+        message: 'All stored data is encrypted with strong symmetric cryptography (aes-256-cfb)\n\nBefore removal, data is replaced with random noise bytes to make it impossible to restore directly by scanning the storage with special tools',
     );
 
-    void eraseAllData(AppStateModel model) => confirm(
+    Future<void> eraseAllData(AppStateModel model) => confirm(
         title: 'Warning: are you sure?',
         message: 'All your saved logins, passwords, bank cards, documents, attached photos and UI settings will be permanently removed from this device\n\nMake sure you have a backup',
         titleIsCritical: true,

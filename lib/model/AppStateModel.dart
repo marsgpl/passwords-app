@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart' as foundation;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:passwords/helpers/generateRandomPassword.dart';
 import 'package:passwords/model/Login.dart';
 import 'package:passwords/model/BankCard.dart';
@@ -9,7 +12,8 @@ import 'package:passwords/model/DocumentsRepository.dart';
 import 'package:passwords/model/SettingsRepository.dart';
 
 class AppStateModel extends foundation.ChangeNotifier {
-    final searchSplit = new RegExp('[ ,\n\r\t]+');
+    final searchSplit = new RegExp(r'[ ,\n\r\t]+');
+    final jsonStringEscape = new RegExp(r'"');
 
     final LoginsRepository logins = LoginsRepository();
     final BankCardsRepository bankCards = BankCardsRepository();
@@ -202,12 +206,41 @@ class AppStateModel extends foundation.ChangeNotifier {
     }
 
     Future<void> eraseAllWithRandom() async {
-        Map<String, String> kvs = await settings.storage.readAll();
+        FlutterSecureStorage storage = settings.storage;
+        Map<String, String> kvs = await storage.readAll();
 
         for (String key in kvs.keys) {
-            await settings.storage.write(
+            await storage.write(
                 key: key,
                 value: generateRandomPassword(length: kvs[key].length),
+            );
+        }
+    }
+
+    Future<String> dumpAllData() async {
+        FlutterSecureStorage storage = settings.storage;
+        Map<String, String> kvs = await storage.readAll();
+
+        List<String> lines = [];
+
+        for (String key in kvs.keys) {
+            String value = kvs[key].replaceAll(jsonStringEscape, '\\"');
+            lines.add('"$key": "$value"');
+        }
+
+        return '{${lines.join(',\n')}}\n';
+    }
+
+    Future<void> restoreFromBackup(String jsonEncoded) async {
+        FlutterSecureStorage storage = settings.storage;
+        Map<String, dynamic> kvs = json.decode(jsonEncoded);
+
+        await settings.storage.deleteAll();
+
+        for (String key in kvs.keys) {
+            await storage.write(
+                key: key,
+                value: kvs[key],
             );
         }
     }
