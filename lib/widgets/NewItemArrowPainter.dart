@@ -21,7 +21,7 @@ class NewItemArrowPainter extends CustomPainter {
         textPainter.layout(minWidth: size.width);
         textPainter.paint(canvas, Offset(
             -122,
-            90,
+            89,
         ));
 
         Path arrowPath = Path();

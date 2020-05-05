@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:passwords/PwdIcons.dart';
+import 'package:passwords/widgets/PageMessage.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 
@@ -47,12 +48,7 @@ class DocumentsPageState extends State<DocumentsPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
                 const Icon(PwdIcons.document, color: Colors.grey, size: 60),
-                const Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: const Text('Documents',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-                    ),
-                ),
+                PageMessage.title('Documents'),
                 const Text('Not implemented yet'),
                 const Text('Wait for updates'),
             ],

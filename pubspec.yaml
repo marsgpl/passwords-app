@@ -16,6 +16,8 @@ dependencies:
   local_auth: ^0.6.2+1
   encrypt: ^4.0.0
   arrow_path: ^1.0.0
+  path_provider: ^1.6.7
+  flutter_file_dialog: ^0.0.5
   flutter_secure_storage: ^3.3.3
   flutter_slidable: ^0.5.4
 

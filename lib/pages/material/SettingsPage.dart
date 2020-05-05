@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/pages/material/BasePage.dart';
@@ -53,6 +56,7 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         children.add(rowAbout());
         children.add(rowBiometrics(model));
         children.add(rowPasswordGeneratorStrength(model));
+        children.add(rowDownloadBackup(model));
         children.add(rowResetSettings(model));
         children.add(rowPurge(model));
 
@@ -181,6 +185,32 @@ class SettingsPageState extends BasePageState<SettingsPage> {
             ),
             onTap: () => setSettingIsTouchIdEnabled(model, !isEnabled),
         );
+    }
+
+    Widget rowDownloadBackup(AppStateModel model) {
+        return ListTile(
+            key: Key('rowDownloadBackup'),
+            leading: const Icon(Icons.backup),
+            title: const Text('Download backup'),
+            subtitle: const Text('Encrypted backup file will contain all data'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+            onTap: () => downloadBackup(model),
+        );
+    }
+
+    Future<void> downloadBackup(AppStateModel model) async {
+        final tmpDir = await getTemporaryDirectory();
+        final bkpFileData = '{"a":123}';
+        final bkpFileName = 'backup.pwd';
+        final bkpFilePath = '${tmpDir.path}/$bkpFileName';
+        final bkpFile = File(bkpFilePath);
+        await bkpFile.writeAsString(bkpFileData);
+
+        final params = SaveFileDialogParams(sourceFilePath: bkpFile.path);
+        final filePath = await FlutterFileDialog.saveFile(params: params);
+        print(filePath);
+
+        await bkpFile.delete();
     }
 
     void resetSettings(AppStateModel model) => confirm(

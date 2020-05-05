@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:passwords/PwdIcons.dart';
+import 'package:passwords/widgets/PageMessage.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 
@@ -47,12 +48,7 @@ class BankCardsPageState extends State<BankCardsPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
                 const Icon(PwdIcons.bank_card, color: Colors.grey, size: 60),
-                const Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: const Text('Bank cards',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-                    ),
-                ),
+                PageMessage.title('Bank cards'),
                 const Text('Not implemented yet'),
                 const Text('Wait for updates'),
             ],
