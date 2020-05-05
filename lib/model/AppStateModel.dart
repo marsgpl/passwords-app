@@ -165,6 +165,11 @@ class AppStateModel extends foundation.ChangeNotifier {
         notifyListeners();
     }
 
+    Future<void> deinitSettings() async {
+        settingsInited = false;
+        notifyListeners();
+    }
+
     Future<void> initBiometrics() async {
         final s = settings.settings;
 

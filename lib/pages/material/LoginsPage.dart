@@ -123,7 +123,14 @@ class LoginsPageState extends BasePageState<LoginsPage> {
 
     List<Widget> buildAppBarActions() {
         if (isSearching) {
-            return null;
+            return [
+                IconButton(
+                    color: Colors.white,
+                    onPressed: closeSearch,
+                    tooltip: 'Close',
+                    icon: const Icon(Icons.close, size: 26),
+                ),
+            ];
         } else {
             return [
                 IconButton(

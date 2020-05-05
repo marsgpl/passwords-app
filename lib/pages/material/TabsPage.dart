@@ -14,8 +14,38 @@ class TabsPage extends StatefulWidget {
     TabsPageState createState() => TabsPageState();
 }
 
-class TabsPageState extends State<TabsPage> {
+class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
     int bottomNavBarCurrentIndex = 0;
+    DateTime lastActive;
+    bool isInBackground = false;
+
+    @override
+    void didChangeAppLifecycleState(AppLifecycleState state) {
+        if (state == AppLifecycleState.resumed) {
+            if (lastActive != null) {
+                int secondsFromLastActivity =
+                    DateTime.now().difference(lastActive).inSeconds;
+
+                lastActive = null;
+
+                if (secondsFromLastActivity >= 30) {
+                    reinit();
+                }
+            }
+
+            setState(() {
+                isInBackground = false;
+            });
+        } else { // inactive paused
+            if (lastActive == null) {
+                lastActive = DateTime.now();
+            }
+
+            setState(() {
+                isInBackground = true;
+            });
+        }
+    }
 
     @override
     void initState() {
@@ -24,6 +54,15 @@ class TabsPageState extends State<TabsPage> {
         AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
 
         model.initSettings();
+
+        WidgetsBinding.instance.addObserver(this);
+    }
+
+    @override
+    void dispose() {
+        super.dispose();
+
+        WidgetsBinding.instance.removeObserver(this);
     }
 
     @override
@@ -108,21 +147,17 @@ class TabsPageState extends State<TabsPage> {
         body: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                     PageMessage.title('Biometric auth is disabled'),
-                    PageMessage.paragraph('Make sure you have Face ID or Touch ID enabled for this app in system settings'),
-                    PageMessage.paragraph('Try to lock and unlock your phone, it will reset biometric failure retries counter'),
-                    Padding(
+                    PageMessage.paragraph('Make sure you have Face ID or Touch ID\nenabled for this app in system settings'),
+                    PageMessage.paragraph('Try to lock and unlock your phone,\nit will reset biometric failure retries'),
+                    Container(
                         padding: EdgeInsets.all(5),
                         child: FlatButton(
                             child: const Text('Try again'),
                             color: PRIMARY_COLOR,
                             textColor: Colors.white,
-                            onPressed: () {
-                                model.settingsInited = false;
-                                model.initSettings();
-                            },
+                            onPressed: reinit,
                         ),
                     ),
                 ],
@@ -144,10 +179,7 @@ class TabsPageState extends State<TabsPage> {
                             child: const Text('Try again'),
                             color: PRIMARY_COLOR,
                             textColor: Colors.white,
-                            onPressed: () {
-                                model.settingsInited = false;
-                                model.initSettings();
-                            },
+                            onPressed: reinit,
                         ),
                     ),
                 ],
@@ -179,4 +211,10 @@ class TabsPageState extends State<TabsPage> {
             selectedFontSize: 12,
             unselectedFontSize: 12,
         );
+
+    Future<void> reinit() async {
+        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+        await model.deinitSettings();
+        await model.initSettings();
+    }
 }
