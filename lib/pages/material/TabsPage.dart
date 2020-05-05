@@ -113,6 +113,18 @@ class TabsPageState extends State<TabsPage> {
                     PageMessage.title('Biometric auth is disabled'),
                     PageMessage.paragraph('Make sure you have Face ID or Touch ID enabled for this app in system settings'),
                     PageMessage.paragraph('Try to lock and unlock your phone, it will reset biometric failure retries counter'),
+                    Padding(
+                        padding: EdgeInsets.all(5),
+                        child: FlatButton(
+                            child: const Text('Try again'),
+                            color: PRIMARY_COLOR,
+                            textColor: Colors.white,
+                            onPressed: () {
+                                model.settingsInited = false;
+                                model.initSettings();
+                            },
+                        ),
+                    ),
                 ],
             ),
         ),
