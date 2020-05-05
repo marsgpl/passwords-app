@@ -49,8 +49,7 @@ class BankCardsPageState extends State<BankCardsPage> {
             children: [
                 const Icon(PwdIcons.bank_card, color: Colors.grey, size: 60),
                 PageMessage.title('Bank cards'),
-                const Text('Not implemented yet'),
-                const Text('Wait for updates'),
+                const Text('Will be available\nin future updates', textAlign: TextAlign.center),
             ],
         ),
     );

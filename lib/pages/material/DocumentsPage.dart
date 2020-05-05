@@ -49,8 +49,7 @@ class DocumentsPageState extends State<DocumentsPage> {
             children: [
                 const Icon(PwdIcons.document, color: Colors.grey, size: 60),
                 PageMessage.title('Documents'),
-                const Text('Not implemented yet'),
-                const Text('Wait for updates'),
+                const Text('Will be available\nin future updates', textAlign: TextAlign.center),
             ],
         ),
     );
