@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:passwords/widgets/PageMessage.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/constants.dart';
 import 'package:passwords/PwdIcons.dart';
@@ -28,36 +29,117 @@ class TabsPageState extends State<TabsPage> {
     @override
     Widget build(BuildContext context) => Scaffold(
         body: buildBody(),
-        bottomNavigationBar: buildBottomNavigationBar(),
+        bottomNavigationBar: buildBottomNavBar(),
     );
 
     Widget buildBody() => Consumer<AppStateModel>(
         builder: (context, model, consumer) {
+            final s = model.settings.settings;
+
             if (!model.settingsInited) {
                 return buildBodyLoading();
-            } else if (model.settings.settings.authenticated == false) {
-                return buildBodyNotAuthed();
+            } else if (s.authenticated == false) {
+                if (!s.isFaceIdSupported && !s.isTouchIdSupported) {
+                    return buildBodyBioIdDisabled(model);
+                } else {
+                    return buildBodyNotAuthed(model);
+                }
             } else {
                 return buildBodyPages();
             }
         }
     );
 
+    Widget buildBottomNavBar() => Consumer<AppStateModel>(
+        builder: (context, model, consumer) {
+            final s = model.settings.settings;
+
+            if (!model.settingsInited || s.authenticated == false) {
+                return buildBottomNavBarContent([
+                    BottomNavigationBarItem(
+                        icon: Container(),
+                        title: Container(),
+                    ),
+                    BottomNavigationBarItem(
+                        icon: Container(),
+                        title: Container(),
+                    ),
+                    BottomNavigationBarItem(
+                        icon: Container(),
+                        title: Container(),
+                    ),
+                    BottomNavigationBarItem(
+                        icon: Container(),
+                        title: Container(),
+                    ),
+                ]);
+            } else {
+                return buildBottomNavBarContent(const [
+                    BottomNavigationBarItem(
+                        icon: const Icon(PwdIcons.login),
+                        title: const Text('Logins'),
+                    ),
+                    BottomNavigationBarItem(
+                        icon: const Icon(PwdIcons.bank_card),
+                        title: const Text('Bank cards'),
+                    ),
+                    BottomNavigationBarItem(
+                        icon: const Icon(PwdIcons.document),
+                        title: const Text('Documents'),
+                    ),
+                    BottomNavigationBarItem(
+                        icon: const Icon(PwdIcons.settings),
+                        title: const Text('Settings'),
+                    ),
+                ]);
+            }
+        }
+    );
+
     Widget buildBodyLoading() => Scaffold(
-        appBar: AppBar(
-            title: const Text(''),
-        ),
+        appBar: AppBar(),
         body: const Center(
             child: const CircularProgressIndicator(),
         ),
     );
 
-    Widget buildBodyNotAuthed() => Scaffold(
-        appBar: AppBar(
-            title: const Text('Authenticate'),
+    Widget buildBodyBioIdDisabled(AppStateModel model) => Scaffold(
+        appBar: AppBar(),
+        body: Center(
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                    PageMessage.title('Biometric auth is disabled'),
+                    PageMessage.paragraph('Make sure you have Face ID or Touch ID enabled for this app in system settings'),
+                    PageMessage.paragraph('Try to lock and unlock your phone, it will reset biometric failure retries counter'),
+                ],
+            ),
         ),
-        body: const Center(
-            child: const Text('Auth failed'),
+    );
+
+    Widget buildBodyNotAuthed(AppStateModel model) => Scaffold(
+        appBar: AppBar(),
+        body: Center(
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                    PageMessage.title('Biometric auth failed'),
+                    PageMessage.paragraph('Try again or contact support'),
+                    Padding(
+                        padding: EdgeInsets.all(5),
+                        child: FlatButton(
+                            child: const Text('Try again'),
+                            color: PRIMARY_COLOR,
+                            textColor: Colors.white,
+                            onPressed: () {
+                                model.settingsInited = false;
+                                model.initSettings();
+                            },
+                        ),
+                    ),
+                ],
+            ),
         ),
     );
 
@@ -71,34 +153,18 @@ class TabsPageState extends State<TabsPage> {
         }
     }
 
-    Widget buildBottomNavigationBar() => BottomNavigationBar(
-        items: const [
-            BottomNavigationBarItem(
-                icon: const Icon(PwdIcons.login),
-                title: const Text('Logins'),
-            ),
-            BottomNavigationBarItem(
-                icon: const Icon(PwdIcons.bank_card),
-                title: const Text('Bank cards'),
-            ),
-            BottomNavigationBarItem(
-                icon: const Icon(PwdIcons.document),
-                title: const Text('Documents'),
-            ),
-            BottomNavigationBarItem(
-                icon: const Icon(PwdIcons.settings),
-                title: const Text('Settings'),
-            ),
-        ],
-        onTap: (index) => setState(() {
-            bottomNavBarCurrentIndex = index;
-        }),
-        currentIndex: bottomNavBarCurrentIndex,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.grey[200],
-        selectedItemColor: PRIMARY_COLOR,
-        unselectedItemColor: Colors.grey[600],
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-    );
+    Widget buildBottomNavBarContent(List<BottomNavigationBarItem> items) =>
+        BottomNavigationBar(
+            items: items,
+            onTap: (index) => setState(() {
+                bottomNavBarCurrentIndex = index;
+            }),
+            currentIndex: bottomNavBarCurrentIndex,
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.grey[200],
+            selectedItemColor: PRIMARY_COLOR,
+            unselectedItemColor: Colors.grey[600],
+            selectedFontSize: 12,
+            unselectedFontSize: 12,
+        );
 }

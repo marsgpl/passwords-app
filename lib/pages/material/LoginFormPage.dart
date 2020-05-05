@@ -402,7 +402,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             decoration: InputDecoration(
                 labelText: 'Password',
                 hasFloatingPlaceholder: true,
-                counter: fieldCounter('Use unique passwords', false),
+                counter: fieldCounter('Configure generator in settings', false),
                 contentPadding: fieldPadding(false),
             ),
             style: LIST_ITEM_TEXT_STYLE,

@@ -154,21 +154,35 @@ class AppStateModel extends foundation.ChangeNotifier {
             print('oops: settings.init: $error');
         });
 
-        final s = settings.settings;
-
-        if (s.isFaceIdSupported && s.isFaceIdEnabled) {
-            s.authenticated = await s.localAuth.authenticateWithBiometrics(
-                localizedReason: 'Auth required',
-            );
-        } else if (s.isTouchIdSupported && s.isTouchIdEnabled) {
-            s.authenticated = await s.localAuth.authenticateWithBiometrics(
-                localizedReason: 'Auth required',
-            );
-        }
+        await initBiometrics();
 
         settingsInited = true;
 
         notifyListeners();
+    }
+
+    Future<void> initBiometrics() async {
+        final s = settings.settings;
+
+        if (s.isFaceIdEnabled || s.isTouchIdEnabled) {
+            s.authenticated = await checkBiometrics();
+        }
+    }
+
+    Future<bool> checkBiometrics() async {
+        bool success;
+
+        try {
+            success = await settings.settings.localAuth.authenticateWithBiometrics(
+                localizedReason: 'Passwords require biometric identification',
+                useErrorDialogs: true,
+                stickyAuth: true,
+            );
+        } catch (error) {
+            success = false;
+        }
+
+        return success;
     }
 
     Future<void> saveSettings() async {

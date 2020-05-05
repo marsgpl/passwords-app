@@ -47,11 +47,12 @@ class DocumentsPageState extends State<DocumentsPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
                 const Icon(PwdIcons.document, color: Colors.grey, size: 60),
-                Container(height: 10),
-                const Text('Documents',
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                const Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: const Text('Documents',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                    ),
                 ),
-                Container(height: 10),
                 const Text('Not implemented yet'),
                 const Text('Wait for updates'),
             ],

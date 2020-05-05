@@ -47,11 +47,12 @@ class BankCardsPageState extends State<BankCardsPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
                 const Icon(PwdIcons.bank_card, color: Colors.grey, size: 60),
-                Container(height: 10),
-                const Text('Bank Cards',
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                const Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: const Text('Bank cards',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                    ),
                 ),
-                Container(height: 10),
                 const Text('Not implemented yet'),
                 const Text('Wait for updates'),
             ],

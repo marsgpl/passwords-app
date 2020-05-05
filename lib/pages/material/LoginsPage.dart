@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
-import 'package:passwords/helpers/NewItemArrowPainter.dart';
+import 'package:passwords/widgets/NewItemArrowPainter.dart';
 import 'package:passwords/helpers/Debouncer.dart';
 import 'package:passwords/model/Login.dart';
 import 'package:passwords/pages/material/BasePage.dart';
@@ -124,14 +124,6 @@ class LoginsPageState extends BasePageState<LoginsPage> {
     List<Widget> buildAppBarActions() {
         if (isSearching) {
             return null;
-            // return [
-            //     IconButton(
-            //         color: Colors.white,
-            //         onPressed: closeSearch,
-            //         tooltip: 'Close',
-            //         icon: const Icon(Icons.close, size: 26),
-            //     ),
-            // ];
         } else {
             return [
                 IconButton(
@@ -149,9 +141,13 @@ class LoginsPageState extends BasePageState<LoginsPage> {
             if (!model.loginsInited) {
                 return buildBodyLoading();
             } else if (model.loginsNotFoundBySearch()) {
-                return buildBodyNotFoundBySearch();
+                return buildBodyNotFoundBySearch(model);
             } else if (model.loginsNoItems()) {
-                return buildBodyNoItems();
+                if (isSearching) {
+                    return buildBodyNotFoundBySearch(model);
+                } else {
+                    return buildBodyNoItems();
+                }
             } else {
                 return buildBodyItems(model.loginsVisibleIds, model.logins.items);
             }
@@ -162,15 +158,35 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         child: const CircularProgressIndicator(),
     );
 
-    Widget buildBodyNotFoundBySearch() => const Center(
-        child: const Text('Nothing found'),
-    );
+    Widget buildBodyNotFoundBySearch(AppStateModel model) {
+        String filter = model.loginsFilter;
+
+        if (filter.length == 0) {
+            return const Center(
+                child: const Text('No results')
+            );
+        } else {
+            if (filter.length > 10) {
+                filter = filter.substring(0, 10) + '...';
+            }
+
+            return Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        const Text('No results'),
+                        Text('for \"$filter\"'),
+                    ],
+                ),
+            );
+        }
+    }
 
     Widget buildBodyNoItems() => Stack(
         alignment: AlignmentDirectional.topEnd,
         children: [
             FractionallySizedBox(
-                widthFactor: 0.5,
+                widthFactor: 1,
                 heightFactor: 0.5,
                 child: Container(
                     child: CustomPaint(
@@ -179,9 +195,12 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                 ),
             ),
             Center(
-                child: const Text(
-                    'Add new login by tapping +\nin upper right corner',
-                    textAlign: TextAlign.center,
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        const Text('Usernames and passwords'),
+                        const Text('For internet services'),
+                    ],
                 ),
             ),
         ],

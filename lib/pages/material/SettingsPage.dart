@@ -95,7 +95,8 @@ class SettingsPageState extends BasePageState<SettingsPage> {
     );
 
     Widget rowPasswordGeneratorStrength(AppStateModel model) {
-        final isEnabled = model.settings.settings.useSpecialSymbolsInGeneratedPasswords;
+        final s = model.settings.settings;
+        final isEnabled = s.useSpecialSymbolsInGeneratedPasswords;
 
         return ListTile(
             key: Key('rowPasswordGeneratorStrength'),
@@ -119,11 +120,11 @@ class SettingsPageState extends BasePageState<SettingsPage> {
     );
 
     Widget rowBiometrics(AppStateModel model) {
-        final settings = model.settings.settings;
+        final s = model.settings.settings;
 
-        if (settings.isFaceIdSupported) {
+        if (s.isFaceIdSupported || s.isFaceIdEnabled) {
             return rowBiometricsFaceId(model);
-        } else if (settings.isTouchIdSupported) {
+        } else if (s.isTouchIdSupported || s.isTouchIdEnabled) {
             return rowBiometricsTouchId(model);
         } else {
             return rowBiometricsNotSupported();
@@ -133,20 +134,21 @@ class SettingsPageState extends BasePageState<SettingsPage> {
     Widget rowBiometricsNotSupported() => ListTile(
         key: Key('rowBiometricsNotSupported'),
         leading: const Icon(Icons.fingerprint),
-        title: const Text('FaceId and TouchId are not supported on this device'),
+        title: const Text('Biometric auth is not supported or disabled in system settings for this app'),
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         enabled: false,
     );
 
     Widget rowBiometricsFaceId(AppStateModel model) {
-        final isEnabled = model.settings.settings.isFaceIdEnabled;
+        final s = model.settings.settings;
+        final isEnabled = s.isFaceIdEnabled;
 
         return ListTile(
             key: Key('rowBiometricsFaceId'),
             leading: const Icon(Icons.face),
             title: isEnabled ?
                 const Text('Face ID is enabled') :
-                const Text('Enable Face ID?'),
+                const Text('Enable Face ID protection?'),
             subtitle: isEnabled ?
                 const Text('Tap to disable') :
                 const Text('On every time you open the app'),
@@ -160,14 +162,15 @@ class SettingsPageState extends BasePageState<SettingsPage> {
     }
 
     Widget rowBiometricsTouchId(AppStateModel model) {
-        final isEnabled = model.settings.settings.isTouchIdEnabled;
+        final s = model.settings.settings;
+        final isEnabled = s.isTouchIdEnabled;
 
         return ListTile(
             key: Key('rowBiometricsTouchId'),
             leading: const Icon(Icons.fingerprint),
             title: isEnabled ?
                 const Text('Touch ID is enabled') :
-                const Text('Enable Touch ID?'),
+                const Text('Enable Touch ID protection?'),
             subtitle: isEnabled ?
                 const Text('Tap to disable') :
                 const Text('On every time you open the app'),
@@ -212,13 +215,31 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         await model.saveSettings();
     }
 
-    Future<void> setSettingIsFaceIdEnabled(AppStateModel model, bool newValue) async {
-        model.settings.settings.isFaceIdEnabled = newValue;
+    Future<void> setSettingIsFaceIdEnabled(AppStateModel model, bool enabled) async {
+        if (enabled) {
+            bool checkSuccess = await model.checkBiometrics();
+            if (!checkSuccess) {
+                return alert(
+                    title: 'Face ID failed',
+                    message: 'Make sure you have Face ID enabled for this app in system settings',
+                );
+            }
+        }
+        model.settings.settings.isFaceIdEnabled = enabled;
         await model.saveSettings();
     }
 
-    Future<void> setSettingIsTouchIdEnabled(AppStateModel model, bool newValue) async {
-        model.settings.settings.isTouchIdEnabled = newValue;
+    Future<void> setSettingIsTouchIdEnabled(AppStateModel model, bool enabled) async {
+        if (enabled) {
+            bool checkSuccess = await model.checkBiometrics();
+            if (!checkSuccess) {
+                return alert(
+                    title: 'Touch ID failed',
+                    message: 'Make sure you have Touch ID enabled for this app in system settings',
+                );
+            }
+        }
+        model.settings.settings.isTouchIdEnabled = enabled;
         await model.saveSettings();
     }
 

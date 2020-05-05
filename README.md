@@ -17,6 +17,14 @@
     flutter run -d 1DDA5EB5-1A2B-4DDC-81C2-FC22231D1172
     flutter run -d marsgpl --release
 
+## Height percent of parent container
+
+    FractionallySizedBox(
+        widthFactor: 0.5,
+        heightFactor: 0.5,
+        child: ...
+    );
+
 ## Icons
 
     https://fluttericon.com/
