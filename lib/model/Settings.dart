@@ -1,47 +1,41 @@
-import 'package:encrypt/encrypt.dart';
-import 'package:local_auth/local_auth.dart';
+import 'package:uuid/uuid.dart';
 
 class Settings {
-    Settings();
+    Settings({
+        id,
+        createdAt,
+        this.howToCopyPasswordTipHidden,
+        this.useSpecialSymbolsInGeneratedPasswords,
+        this.isFaceIdEnabled,
+        this.isTouchIdEnabled,
+    }) :
+        id = id ?? Uuid().v4(),
+        createdAt = createdAt ?? DateTime.now();
 
+    final String id;
+    final DateTime createdAt;
     bool howToCopyPasswordTipHidden = false;
     bool useSpecialSymbolsInGeneratedPasswords = false;
     bool isFaceIdEnabled = false;
     bool isTouchIdEnabled = false;
 
-    // !!! do not include these in fromJson/toJson:
-    String masterkey;
-    String masterkeyInitVector;
-    Key key;
-    IV iv;
-    Encrypter encrypter;
-    LocalAuthentication localAuth;
-    bool isFaceIdSupported;
-    bool isTouchIdSupported;
-    bool authenticated;
-    // !!! end
-
     @override
-    String toString() => '*Settings()';
+    String toString() => '*Settings(id: $id)';
 
     Settings.fromJson(Map<String, dynamic> jsonData) :
-        howToCopyPasswordTipHidden =
-            jsonData['howToCopyPasswordTipHidden'] ?? false,
-        useSpecialSymbolsInGeneratedPasswords =
-            jsonData['useSpecialSymbolsInGeneratedPasswords'] ?? false,
-        isFaceIdEnabled =
-            jsonData['isFaceIdEnabled'] ?? false,
-        isTouchIdEnabled =
-            jsonData['isTouchIdEnabled'] ?? false;
+        id = jsonData['id'] ?? Uuid().v4(),
+        createdAt = DateTime.parse(jsonData['createdAt'] ?? DateTime.now().toString()),
+        howToCopyPasswordTipHidden = jsonData['howToCopyPasswordTipHidden'] ?? false,
+        useSpecialSymbolsInGeneratedPasswords = jsonData['useSpecialSymbolsInGeneratedPasswords'] ?? false,
+        isFaceIdEnabled = jsonData['isFaceIdEnabled'] ?? false,
+        isTouchIdEnabled = jsonData['isTouchIdEnabled'] ?? false;
 
     Map<String, dynamic> toJson() => {
-        'howToCopyPasswordTipHidden':
-            howToCopyPasswordTipHidden ?? false,
-        'useSpecialSymbolsInGeneratedPasswords':
-            useSpecialSymbolsInGeneratedPasswords ?? false,
-        'isFaceIdEnabled':
-            isFaceIdEnabled ?? false,
-        'isTouchIdEnabled':
-            isTouchIdEnabled ?? false,
+        'id': id,
+        'createdAt': createdAt.toString(),
+        'howToCopyPasswordTipHidden': howToCopyPasswordTipHidden,
+        'useSpecialSymbolsInGeneratedPasswords': useSpecialSymbolsInGeneratedPasswords,
+        'isFaceIdEnabled': isFaceIdEnabled,
+        'isTouchIdEnabled': isTouchIdEnabled,
     };
 }

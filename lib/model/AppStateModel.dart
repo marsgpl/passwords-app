@@ -1,29 +1,26 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:passwords/helpers/generateRandomPassword.dart';
 import 'package:passwords/model/Login.dart';
-import 'package:passwords/model/BankCard.dart';
-import 'package:passwords/model/Document.dart';
+import 'package:passwords/model/Biometrics.dart';
+import 'package:passwords/model/Cryptography.dart';
 import 'package:passwords/model/LoginsRepository.dart';
 import 'package:passwords/model/BankCardsRepository.dart';
 import 'package:passwords/model/DocumentsRepository.dart';
 import 'package:passwords/model/SettingsRepository.dart';
 
 class AppStateModel extends foundation.ChangeNotifier {
-    final searchSplit = new RegExp(r'[ ,\n\r\t]+');
-    final jsonStringEscape = new RegExp(r'"');
+    final regexpSearchChunkSeparator = new RegExp(r'[ ,\n\r\t]+', multiLine: true);
+    final regexpEscapeQuoteForJsonEncode = new RegExp(r'"');
 
+    final storage = FlutterSecureStorage();
+    Map<String, String> localStorageInitialData;
+
+    final SettingsRepository settings = SettingsRepository();
     final LoginsRepository logins = LoginsRepository();
     final BankCardsRepository bankCards = BankCardsRepository();
     final DocumentsRepository documents = DocumentsRepository();
-    final SettingsRepository settings = SettingsRepository();
-
-    bool loginsInited = false;
-    bool bankCardsInited = false;
-    bool documentsInited = false;
-    bool settingsInited = false;
+    final Biometrics biometrics = Biometrics();
+    final Cryptography crypto = Cryptography();
 
     String loginsFilter = '';
     String bankCardsFilter = '';
@@ -38,36 +35,36 @@ class AppStateModel extends foundation.ChangeNotifier {
     List<String> documentsVisibleIds;
 
     bool loginsNotFoundBySearch() =>
-        loginsInited &&
-        loginsVisibleIds.length == 0 &&
-        loginsFilter.length > 0;
+        logins.isInited &&
+        loginsFilter.length > 0 &&
+        loginsVisibleIds.length == 0;
 
     bool loginsNoItems() =>
-        loginsInited &&
-        loginsVisibleIds.length == 0 &&
-        loginsFilter.length == 0;
+        logins.isInited &&
+        loginsFilter.length == 0 &&
+        loginsVisibleIds.length == 0;
 
     void onLoginSearch(String searchText) {
         loginsFilter = searchText.trim().toLowerCase();
-        loginsFilterChunks = loginsFilter.split(searchSplit);
+        loginsFilterChunks = loginsFilter.split(regexpSearchChunkSeparator);
         filterLoginsVisibleIds();
         notifyListeners();
     }
 
     void filterLoginsVisibleIds() {
         final items = logins.items;
-        final itemsSearchBuffs = logins.search;
+        final searchCache = logins.search;
 
         if (loginsFilter.length == 0) {
             loginsVisibleIds = items.keys.toList();
         } else if (loginsFilterChunks.length == 1) {
             loginsVisibleIds = items.keys.where((itemId) =>
-                itemsSearchBuffs[itemId].contains(loginsFilter)).toList();
+                searchCache[itemId].contains(loginsFilter)).toList();
         } else {
             loginsVisibleIds = items.keys.where((itemId) {
-                final item = itemsSearchBuffs[itemId];
+                final itemSearchCache = searchCache[itemId];
                 for (int i = 0, c = loginsFilterChunks.length; i < c; ++i) {
-                    if (!item.contains(loginsFilterChunks[i])) return false;
+                    if (!itemSearchCache.contains(loginsFilterChunks[i])) return false;
                 }
                 return true;
             }).toList();
@@ -80,11 +77,13 @@ class AppStateModel extends foundation.ChangeNotifier {
     Future<void> addLogin(Login item) async {
         await logins.saveItem(item);
 
-        if (loginsFilter.length == 0) {
+        if (loginsFilter.length > 0) {
+            filterLoginsVisibleIds();
+            notifyListeners();
+        } else {
             loginsVisibleIds.insert(0, item.id);
+            notifyListeners();
         }
-
-        notifyListeners();
     }
 
     Future<void> saveLogin(Login item) async {
@@ -101,166 +100,69 @@ class AppStateModel extends foundation.ChangeNotifier {
         notifyListeners();
     }
 
+    Future<void> initLocalStorageInitialData() async {
+        localStorageInitialData = await storage.readAll();
+    }
+
+    Future<void> initCrypto() async {
+        if (crypto.isInited) return;
+        if (localStorageInitialData == null) await initLocalStorageInitialData();
+
+        await crypto.init(localStorageInitialData);
+    }
+
+    Future<void> initBiometrics() async {
+        if (biometrics.isInited) return;
+
+        await biometrics.init();
+    }
+
     Future<void> initLogins() async {
-        if (loginsInited) return;
+        if (logins.isInited) return;
+        if (localStorageInitialData == null) await initLocalStorageInitialData();
+        if (!crypto.isInited) await initCrypto();
 
-        await initSettings();
-
-        logins.settings = settings;
-
-        await logins.initAll().catchError((error) {
-            print('oops: logins.initAll: $error');
-        });
+        logins.crypto = crypto;
+        await logins.init(localStorageInitialData);
 
         filterLoginsVisibleIds();
-
-        loginsInited = true;
-
         notifyListeners();
     }
 
     Future<void> initBankCards() async {
-        if (bankCardsInited) return;
+        if (bankCards.isInited) return;
+        if (localStorageInitialData == null) await initLocalStorageInitialData();
+        if (!crypto.isInited) await initCrypto();
 
-        await initSettings();
+        bankCards.crypto = crypto;
+        await bankCards.init(localStorageInitialData);
 
-        bankCards.settings = settings;
-
-        await bankCards.initAll().catchError((error) {
-            print('oops: bankCards.initAll: $error');
-        });
-
-        bankCardsInited = true;
-
+        // TODO filterBankCardsVisibleIds();
         notifyListeners();
     }
 
     Future<void> initDocuments() async {
-        if (documentsInited) return;
+        if (documents.isInited) return;
+        if (localStorageInitialData == null) await initLocalStorageInitialData();
+        if (!crypto.isInited) await initCrypto();
 
-        await initSettings();
+        documents.crypto = crypto;
+        await documents.init(localStorageInitialData);
 
-        documents.settings = settings;
-
-        await documents.initAll().catchError((error) {
-            print('oops: documents.initAll: $error');
-        });
-
-        documentsInited = true;
-
+        // TODO filterDocumentsVisibleIds();
         notifyListeners();
     }
 
     Future<void> initSettings() async {
-        if (settingsInited) return;
+        if (settings.isInited) return;
+        if (localStorageInitialData == null) await initLocalStorageInitialData();
 
-        await settings.init().catchError((error) {
-            print('oops: settings.init: $error');
-        });
-
-        await initBiometrics();
-
-        settingsInited = true;
+        await settings.init(localStorageInitialData);
 
         notifyListeners();
-    }
-
-    Future<void> deinitSettings() async {
-        settingsInited = false;
-        notifyListeners();
-    }
-
-    Future<void> initBiometrics() async {
-        final s = settings.settings;
-
-        if (s.isFaceIdEnabled || s.isTouchIdEnabled) {
-            s.authenticated = await checkBiometrics();
-        }
-    }
-
-    Future<bool> checkBiometrics() async {
-        bool success;
-
-        try {
-            success = await settings.settings.localAuth.authenticateWithBiometrics(
-                localizedReason: 'Passwords require biometric identification',
-                useErrorDialogs: true,
-                stickyAuth: true,
-            );
-        } catch (error) {
-            success = false;
-        }
-
-        return success;
     }
 
     Future<void> saveSettings() async {
         await settings.save();
-        notifyListeners();
-    }
-
-    Future<void> resetAndSaveSettings() async {
-        await settings.resetAndSave();
-        notifyListeners();
-    }
-
-    Future<void> eraseAllData() async {
-        await eraseAllWithRandom();
-        await settings.storage.deleteAll();
-        await reinitAll();
-    }
-
-    Future<void> eraseAllWithRandom() async {
-        FlutterSecureStorage storage = settings.storage;
-        Map<String, String> kvs = await storage.readAll();
-
-        for (String key in kvs.keys) {
-            await storage.write(
-                key: key,
-                value: generateRandomPassword(length: kvs[key].length),
-            );
-        }
-    }
-
-    Future<String> dumpAllData() async {
-        FlutterSecureStorage storage = settings.storage;
-        Map<String, String> kvs = await storage.readAll();
-
-        List<String> lines = [];
-
-        for (String key in kvs.keys) {
-            String value = kvs[key].replaceAll(jsonStringEscape, '\\"');
-            lines.add('"$key": "$value"');
-        }
-
-        return '{${lines.join(',\n')}}\n';
-    }
-
-    Future<void> restoreFromBackup(String jsonEncoded) async {
-        FlutterSecureStorage storage = settings.storage;
-        Map<String, dynamic> kvs = json.decode(jsonEncoded);
-
-        await settings.storage.deleteAll();
-
-        for (String key in kvs.keys) {
-            await storage.write(
-                key: key,
-                value: kvs[key],
-            );
-        }
-    }
-
-    Future<void> reinitAll() async {
-        loginsInited = false;
-        bankCardsInited = false;
-        documentsInited = false;
-        settingsInited = false;
-
-        await initLogins();
-        await initBankCards();
-        await initDocuments();
-        await initSettings();
-
-        notifyListeners();
     }
 }

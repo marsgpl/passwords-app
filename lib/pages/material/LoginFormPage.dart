@@ -619,9 +619,8 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             color: isWebsiteEnabled ?
                 PRIMARY_COLOR :
                 Colors.black38,
-            onPressed: isWebsiteEnabled ?
-                () => openUrl(websiteController.text.trim()) :
-                null,
+            onPressed: !isWebsiteEnabled ? null :
+                () => openUrl(websiteController.text.trim()),
             tooltip: 'Open',
             icon: const Icon(Icons.open_in_new),
         ),

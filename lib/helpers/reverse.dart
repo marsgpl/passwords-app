@@ -1,3 +1,1 @@
-String reverse(String text) {
-    return String.fromCharCodes(text.runes.toList().reversed);
-}
+String reverse(String text) => String.fromCharCodes(text.runes.toList().reversed);

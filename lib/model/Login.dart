@@ -17,13 +17,13 @@ class Login implements Comparable<Login> {
 
     final String id;
     final DateTime createdAt;
-    String title;
+    String title = '';
     String login;
     String password;
     String website;
     List<String> backup2faCodes = [];
-    List<String> secretQuestions;
-    List<String> secretQuestionsAnswers;
+    List<String> secretQuestions = [];
+    List<String> secretQuestionsAnswers = [];
 
     @override
     String toString() => '*Login(id: $id)';
@@ -42,18 +42,15 @@ class Login implements Comparable<Login> {
     }
 
     Login.fromJson(Map<String, dynamic> jsonData) :
-        id = jsonData['id'],
-        createdAt = DateTime.parse(jsonData['createdAt']),
-        title = jsonData['title'],
+        id = jsonData['id'] ?? Uuid().v4(),
+        createdAt = DateTime.parse(jsonData['createdAt'] ?? DateTime.now().toString()),
+        title = jsonData['title'] ?? '',
         login = jsonData['login'],
         password = jsonData['password'],
         website = jsonData['website'],
-        backup2faCodes = jsonData['backup2faCodes'] == null ? [] :
-            jsonData['backup2faCodes'].cast<String>(),
-        secretQuestions = jsonData['secretQuestions'] == null ? [] :
-            jsonData['secretQuestions'].cast<String>(),
-        secretQuestionsAnswers = jsonData['secretQuestionsAnswers'] == null ? [] :
-            jsonData['secretQuestionsAnswers'].cast<String>();
+        backup2faCodes = (jsonData['backup2faCodes'] ?? []).cast<String>(),
+        secretQuestions = (jsonData['secretQuestions'] ?? []).cast<String>(),
+        secretQuestionsAnswers = (jsonData['secretQuestionsAnswers'] ?? []).cast<String>();
 
     Map<String, dynamic> toJson() => {
         'id': id,

@@ -14,17 +14,11 @@ const CHARS_WITH_SPECIAL = [
     '_', '+', '=', '_', '~', '<', '>', '?', '/', '|',
 ];
 
-const SEPS = [];
-
 String generateRandomPassword({
     int length = 20,
     bool useSpecialSymbols = false,
 }) {
     final random = Random.secure();
-
-    return useSpecialSymbols ?
-        List.generate(length, (index) =>
-            CHARS_WITH_SPECIAL[random.nextInt(CHARS_WITH_SPECIAL.length)]).join('') :
-        List.generate(length, (index) =>
-            CHARS[random.nextInt(CHARS.length)]).join('');
+    final dict = useSpecialSymbols ? CHARS_WITH_SPECIAL : CHARS;
+    return List.generate(length, (index) => dict[random.nextInt(dict.length)]).join('');
 }

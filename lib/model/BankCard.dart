@@ -18,7 +18,7 @@ class BankCard implements Comparable<BankCard> {
     String title;
     String number;
     int csv;
-    DateTime expiresAt;
+    String expiresAt;
     String owner;
 
     @override
@@ -38,12 +38,12 @@ class BankCard implements Comparable<BankCard> {
     }
 
     BankCard.fromJson(Map<String, dynamic> jsonData) :
-        id = jsonData['id'],
-        createdAt = DateTime.parse(jsonData['createdAt']),
+        id = jsonData['id'] ?? Uuid().v4(),
+        createdAt = DateTime.parse(jsonData['createdAt'] ?? DateTime.now().toString()),
         title = jsonData['title'],
         number = jsonData['number'],
         csv = jsonData['csv'],
-        expiresAt = DateTime.parse(jsonData['expiresAt']),
+        expiresAt = jsonData['expiresAt'],
         owner = jsonData['owner'];
 
     Map<String, dynamic> toJson() => {
@@ -52,7 +52,7 @@ class BankCard implements Comparable<BankCard> {
         'title': title,
         'number': number,
         'csv': csv,
-        'expiresAt': expiresAt.toString(),
+        'expiresAt': expiresAt,
         'owner': owner,
     };
 }

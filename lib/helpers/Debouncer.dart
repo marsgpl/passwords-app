@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'dart:async';
 
 class Debouncer {
-    final int milliseconds;
+    int milliseconds;
     VoidCallback action;
     Timer timer;
 
     Debouncer({
-        this.milliseconds,
+        this.milliseconds = 100,
     });
 
     run(VoidCallback action) {

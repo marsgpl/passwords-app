@@ -11,7 +11,7 @@ class Document implements Comparable<Document> {
 
     final String id;
     final DateTime createdAt;
-    String title;
+    String title = '';
 
     @override
     String toString() => '*Document(id: $id)';
@@ -27,9 +27,9 @@ class Document implements Comparable<Document> {
     }
 
     Document.fromJson(Map<String, dynamic> jsonData) :
-        id = jsonData['id'],
-        createdAt = DateTime.parse(jsonData['createdAt']),
-        title = jsonData['title'];
+        id = jsonData['id'] ?? Uuid().v4(),
+        createdAt = DateTime.parse(jsonData['createdAt'] ?? DateTime.now().toString()),
+        title = jsonData['title'] ?? '';
 
     Map<String, dynamic> toJson() => {
         'id': id,

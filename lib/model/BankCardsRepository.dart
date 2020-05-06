@@ -1,32 +1,36 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:passwords/helpers/generateRandomPassword.dart';
+import 'package:passwords/model/Cryptography.dart';
 import 'package:passwords/model/BankCard.dart';
-import 'package:passwords/model/SettingsRepository.dart';
+import 'package:passwords/helpers/generateRandomPassword.dart';
 
 class BankCardsRepository {
-    final FlutterSecureStorage storage;
+    final FlutterSecureStorage storage = FlutterSecureStorage();
     Map<String, BankCard> items;
-    Map<String, String> search = {};
+    Map<String, String> search;
     String storageItemKeyPrefix = 'BankCard.';
-    SettingsRepository settings;
+    Cryptography crypto;
 
-    BankCardsRepository():
-        storage = FlutterSecureStorage();
+    bool get isInited => items != null;
 
-    Future<void> initAll() async {
+    Future<void> init(Map<String, String> localStorageInitialData) async {
         items = {};
 
-        Map<String, String> kvs = await storage.readAll();
+        final minKeyLength = storageItemKeyPrefix.length + 1;
 
-        for (String key in kvs.keys) {
-            if (key.length > storageItemKeyPrefix.length &&
-                key.substring(0, storageItemKeyPrefix.length) == storageItemKeyPrefix
-            ) {
-                BankCard item = BankCard.fromJson(json.decode(settings.decrypt(kvs[key])));
+        for (String key in localStorageInitialData.keys) {
+            if (key.length < minKeyLength) continue;
+            if (key.substring(0, storageItemKeyPrefix.length) != storageItemKeyPrefix) continue;
+
+            try {
+                BankCard item = BankCard.fromJson(json.decode(crypto.decrypt(localStorageInitialData[key])));
                 items[item.id] = item;
+            } catch(error) {
+                print('BankCard init from key "$key" error: $error');
             }
         }
+
+        buildSearch();
     }
 
     BankCard getItemById(String id) {
@@ -35,19 +39,41 @@ class BankCardsRepository {
 
     Future<void> saveItem(BankCard item) async {
         String key = storageItemKeyPrefix + item.id;
-        String value = settings.encrypt(json.encode(item.toJson()));
+        String value = crypto.encrypt(json.encode(item.toJson()));
 
         await storage.write(key: key, value: value);
 
         items[item.id] = item;
+        buildSearchForItem(item);
     }
 
     Future<void> deleteItem(BankCard item) async {
         String key = storageItemKeyPrefix + item.id;
 
-        await storage.write(key: key, value: generateRandomPassword(length: 128));
+        await storage.write(key: key, value: generateRandomPassword(length: 256));
         await storage.delete(key: key);
 
         items.remove(item.id);
+        search.remove(item.id);
+    }
+
+    void buildSearch() {
+        search = {};
+
+        items.forEach((id, item) {
+            search[id] = buildSearchForItem(item);
+        });
+    }
+
+    String buildSearchForItem(BankCard item) {
+        List<String> search = [];
+
+        if (item.title != null && item.title.length > 0) search.add(item.title.toLowerCase());
+        if (item.number != null && item.number.length > 0) search.add(item.number);
+        if (item.csv != null) search.add(item.csv.toString());
+        if (item.expiresAt != null && item.expiresAt.length > 0) search.add(item.expiresAt);
+        if (item.owner != null && item.owner.length > 0) search.add(item.owner.toLowerCase());
+
+        return search.join(' ');
     }
 }

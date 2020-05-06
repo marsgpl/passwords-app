@@ -67,8 +67,8 @@ class BasePageState<T extends StatefulWidget> extends State<T> {
         return showDialog<void>(
             context: context,
             builder: (BuildContext context) => AlertDialog(
-                title: Text(title, style: !titleIsCritical ? null :
-                    const TextStyle(color: Colors.red)),
+                title: Text(title, style: titleIsCritical ?
+                    const TextStyle(color: Colors.red) : null),
                 content: Text(message),
                 actions: <Widget>[
                     FlatButton(
