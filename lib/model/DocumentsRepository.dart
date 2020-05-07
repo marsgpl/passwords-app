@@ -13,7 +13,8 @@ class DocumentsRepository {
 
     bool get isInited => items != null;
 
-    Future<void> init(Map<String, String> localStorageInitialData) async {
+    Future<void> init(Map<String, String> localStorageInitialData, Cryptography crypto) async {
+        this.crypto = crypto;
         items = {};
 
         final minKeyLength = storageItemKeyPrefix.length + 1;

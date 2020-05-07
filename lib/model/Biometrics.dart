@@ -4,9 +4,13 @@ class Biometrics {
     LocalAuthentication localAuth;
     bool isFaceIdSupported;
     bool isTouchIdSupported;
-    bool isAuthed;
 
     bool get isInited => localAuth != null;
+    bool get isSupported => isFaceIdSupported || isTouchIdSupported;
+
+    void reset() {
+        localAuth = null;
+    }
 
     Future<void> init() async {
         localAuth = LocalAuthentication();
@@ -16,10 +20,10 @@ class Biometrics {
     }
 
     Future<bool> challenge() async {
-        if (!isFaceIdSupported && !isTouchIdSupported) return false; // don't keep result
+        if (!isSupported) return false;
 
         try {
-            isAuthed = await localAuth.authenticateWithBiometrics(
+            return await localAuth.authenticateWithBiometrics(
                 localizedReason: isFaceIdSupported ?
                     'Pass Face ID challenge to proceed' :
                     'Scan your finger to proceed',
@@ -27,9 +31,8 @@ class Biometrics {
                 sensitiveTransaction: false,
             );
         } catch (error) {
-            isAuthed = false;
+            print('Biometrics challenge error: $error');
+            return false;
         }
-
-        return isAuthed;
     }
 }

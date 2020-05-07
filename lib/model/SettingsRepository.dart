@@ -15,8 +15,7 @@ class SettingsRepository {
         try {
             settings = Settings.fromJson(json.decode(localStorageInitialData[storageKey]));
         } catch (error) {
-            settings = Settings();
-            tasks.add(save());
+            tasks.add(reset());
 
             print('Settings init error: $error');
         }
@@ -24,6 +23,11 @@ class SettingsRepository {
         if (tasks.length > 0) {
             await Future.wait(tasks);
         }
+    }
+
+    Future<void> reset() async {
+        settings = Settings();
+        await save();
     }
 
     Future<void> save() async {

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:passwords/widgets/PageMessage.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/constants.dart';
 import 'package:passwords/PwdIcons.dart';
 import 'package:passwords/model/AppStateModel.dart';
-import 'package:passwords/pages/material/LoginsPage.dart';
-import 'package:passwords/pages/material/BankCardsPage.dart';
-import 'package:passwords/pages/material/DocumentsPage.dart';
+import 'package:passwords/widgets/PageMessage.dart';
 import 'package:passwords/pages/material/SettingsPage.dart';
 
 class TabsPage extends StatefulWidget {
@@ -16,29 +13,29 @@ class TabsPage extends StatefulWidget {
 
 class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
     int bottomNavBarCurrentIndex = 0;
-    DateTime lastActive;
     bool isInBackground = false;
+    DateTime whenGoneToBackground;
 
     @override
     void didChangeAppLifecycleState(AppLifecycleState state) {
         if (state == AppLifecycleState.resumed) {
-            if (lastActive != null) {
+            if (whenGoneToBackground != null) {
                 int secondsFromLastActivity =
-                    DateTime.now().difference(lastActive).inSeconds;
+                    DateTime.now().difference(whenGoneToBackground).inSeconds;
 
-                lastActive = null;
+                whenGoneToBackground = null;
 
                 if (secondsFromLastActivity >= 30) {
-                    reinit();
+                    biometricAuthRetry();
                 }
             }
 
             setState(() {
                 isInBackground = false;
             });
-        } else { // inactive paused
-            if (lastActive == null) {
-                lastActive = DateTime.now();
+        } else { // inactive, paused, ... -> gone to background
+            if (whenGoneToBackground == null) {
+                whenGoneToBackground = DateTime.now();
             }
 
             setState(() {
@@ -51,11 +48,11 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
     void initState() {
         super.initState();
 
-        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
-
-        model.initSettings();
-
         WidgetsBinding.instance.addObserver(this);
+
+        final model = Provider.of<AppStateModel>(context, listen: false);
+
+        model.biometricAuth();
     }
 
     @override
@@ -73,64 +70,14 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
 
     Widget buildBody() => Consumer<AppStateModel>(
         builder: (context, model, consumer) {
-            final s = model.settings.settings;
-
-            if (!model.settingsInited) {
+            if (model.isBiometricAuthRequired == null) {
                 return buildBodyLoading();
-            } else if (s.authenticated == false) {
-                if (!s.isFaceIdSupported && !s.isTouchIdSupported) {
-                    return buildBodyBioIdDisabled(model);
-                } else {
-                    return buildBodyNotAuthed(model);
-                }
-            } else {
+            } else if (!model.isBiometricAuthRequired || model.isBiometricAuthed) {
                 return buildBodyPages();
-            }
-        }
-    );
-
-    Widget buildBottomNavBar() => Consumer<AppStateModel>(
-        builder: (context, model, consumer) {
-            final s = model.settings.settings;
-
-            if (!model.settingsInited || s.authenticated == false) {
-                return buildBottomNavBarContent([
-                    BottomNavigationBarItem(
-                        icon: Container(),
-                        title: Container(),
-                    ),
-                    BottomNavigationBarItem(
-                        icon: Container(),
-                        title: Container(),
-                    ),
-                    BottomNavigationBarItem(
-                        icon: Container(),
-                        title: Container(),
-                    ),
-                    BottomNavigationBarItem(
-                        icon: Container(),
-                        title: Container(),
-                    ),
-                ]);
+            } else if (!model.biometrics.isSupported) {
+                return buildBodyBiometricsDisabledButRequired(model);
             } else {
-                return buildBottomNavBarContent(const [
-                    BottomNavigationBarItem(
-                        icon: const Icon(PwdIcons.login),
-                        title: const Text('Logins'),
-                    ),
-                    BottomNavigationBarItem(
-                        icon: const Icon(PwdIcons.bank_card),
-                        title: const Text('Bank cards'),
-                    ),
-                    BottomNavigationBarItem(
-                        icon: const Icon(PwdIcons.document),
-                        title: const Text('Documents'),
-                    ),
-                    BottomNavigationBarItem(
-                        icon: const Icon(PwdIcons.settings),
-                        title: const Text('Settings'),
-                    ),
-                ]);
+                return buildBodyBiometricsAuthFail(model);
             }
         }
     );
@@ -142,22 +89,32 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
         ),
     );
 
-    Widget buildBodyBioIdDisabled(AppStateModel model) => Scaffold(
+    Widget buildBodyPages() {
+        switch (bottomNavBarCurrentIndex) {
+            case 0: return Scaffold(appBar: AppBar(title:Text('Logins')),body:Center(child:Text('TODO: Logins')));
+            case 1: return Scaffold(appBar: AppBar(title:Text('Bank cards')),body:Center(child:Text('TODO: Bank cards')));
+            case 2: return Scaffold(appBar: AppBar(title:Text('Documents')),body:Center(child:Text('TODO: Documents')));
+            case 3: return SettingsPage();
+            default: return null;
+        }
+    }
+
+    Widget buildBodyBiometricsDisabledButRequired(AppStateModel model) => Scaffold(
         appBar: AppBar(),
         body: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                    PageMessage.title('Biometric auth is disabled'),
-                    PageMessage.paragraph('Make sure you have Face ID or Touch ID\nenabled for this app in system settings'),
-                    PageMessage.paragraph('Try to lock and unlock your phone,\nit will reset biometric failure retries'),
-                    Container(
-                        padding: EdgeInsets.all(5),
+                    PageMessage.title('Biometric auth is not available'),
+                    PageMessage.paragraph('1. Make sure you have Face ID or Touch ID enabled for this app in system settings'),
+                    PageMessage.paragraph('2. Try to lock and then unlock your device, this will reset biometric failure retries count'),
+                    Padding(
+                        padding: const EdgeInsets.all(8),
                         child: FlatButton(
                             child: const Text('Try again'),
                             color: PRIMARY_COLOR,
                             textColor: Colors.white,
-                            onPressed: reinit,
+                            onPressed: biometricAuthRetry,
                         ),
                     ),
                 ],
@@ -165,7 +122,7 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
         ),
     );
 
-    Widget buildBodyNotAuthed(AppStateModel model) => Scaffold(
+    Widget buildBodyBiometricsAuthFail(AppStateModel model) => Scaffold(
         appBar: AppBar(),
         body: Center(
             child: Column(
@@ -174,12 +131,12 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
                     PageMessage.title('Biometric auth failed'),
                     PageMessage.paragraph('Try again or contact support'),
                     Padding(
-                        padding: EdgeInsets.all(5),
+                        padding: const EdgeInsets.all(8),
                         child: FlatButton(
                             child: const Text('Try again'),
                             color: PRIMARY_COLOR,
                             textColor: Colors.white,
-                            onPressed: reinit,
+                            onPressed: biometricAuthRetry,
                         ),
                     ),
                 ],
@@ -187,34 +144,62 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
         ),
     );
 
-    Widget buildBodyPages() {
-        switch (bottomNavBarCurrentIndex) {
-            case 0: return LoginsPage();
-            case 1: return BankCardsPage();
-            case 2: return DocumentsPage();
-            case 3: return SettingsPage();
-            default: return null;
+    Future<void> biometricAuthRetry() async {
+        final model = Provider.of<AppStateModel>(context, listen: false);
+        await model.biometricAuth(reset: true);
+    }
+
+    Widget buildBottomNavBar() => Consumer<AppStateModel>(
+        builder: (context, model, consumer) {
+            if (
+                model.isBiometricAuthRequired != null &&
+                (!model.isBiometricAuthRequired || model.isBiometricAuthed)
+            ) {
+                return buildBottomNavBarPages();
+            } else {
+                return buildBottomNavBarEmpty();
+            }
         }
-    }
+    );
 
-    Widget buildBottomNavBarContent(List<BottomNavigationBarItem> items) =>
-        BottomNavigationBar(
-            items: items,
-            onTap: (index) => setState(() {
-                bottomNavBarCurrentIndex = index;
-            }),
-            currentIndex: bottomNavBarCurrentIndex,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.grey[200],
-            selectedItemColor: PRIMARY_COLOR,
-            unselectedItemColor: Colors.grey[600],
-            selectedFontSize: 12,
-            unselectedFontSize: 12,
-        );
+    Widget buildBottomNavBarPages() => BottomNavigationBar(
+        items: const [
+            BottomNavigationBarItem(
+                icon: const Icon(PwdIcons.login),
+                title: const Text('Logins'),
+            ),
+            BottomNavigationBarItem(
+                icon: const Icon(PwdIcons.bank_card),
+                title: const Text('Bank cards'),
+            ),
+            BottomNavigationBarItem(
+                icon: const Icon(PwdIcons.document),
+                title: const Text('Documents'),
+            ),
+            BottomNavigationBarItem(
+                icon: const Icon(PwdIcons.settings),
+                title: const Text('Settings'),
+            ),
+        ],
+        onTap: (index) => setState(() {
+            bottomNavBarCurrentIndex = index;
+        }),
+        currentIndex: bottomNavBarCurrentIndex,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.grey[200],
+        selectedItemColor: PRIMARY_COLOR,
+        unselectedItemColor: Colors.grey[500],
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+    );
 
-    Future<void> reinit() async {
-        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
-        await model.deinitSettings();
-        await model.initSettings();
-    }
+    Widget buildBottomNavBarEmpty() => BottomNavigationBar(
+        items: [],
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.grey[200],
+        selectedItemColor: PRIMARY_COLOR,
+        unselectedItemColor: Colors.grey[500],
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+    );
 }

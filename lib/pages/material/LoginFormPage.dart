@@ -109,7 +109,8 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
 
         isWebsiteEnabled = websiteHasText();
 
-        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+        final model = Provider.of<AppStateModel>(context, listen: false);
+
         useSpecialSymbolsInGeneratedPasswords =
             model.settings.settings.useSpecialSymbolsInGeneratedPasswords;
     }
@@ -274,7 +275,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         widget.item.secretQuestions = secretQuestions;
         widget.item.secretQuestionsAnswers = secretQuestionsAnswers;
 
-        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+        final model = Provider.of<AppStateModel>(context, listen: false);
 
         await model.saveLogin(widget.item);
 
@@ -282,7 +283,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
     }
 
     Future<void> deleteItemConfirmed() async {
-        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+        final model = Provider.of<AppStateModel>(context, listen: false);
 
         await model.deleteLogin(widget.item);
 
@@ -345,7 +346,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             secretQuestionsAnswers: secretQuestionsAnswers,
         );
 
-        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+        final model = Provider.of<AppStateModel>(context, listen: false);
 
         await model.addLogin(item);
 

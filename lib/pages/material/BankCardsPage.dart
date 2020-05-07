@@ -14,7 +14,7 @@ class BankCardsPageState extends State<BankCardsPage> {
     void initState() {
         super.initState();
 
-        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+        final model = Provider.of<AppStateModel>(context, listen: false);
 
         model.initBankCards();
     }

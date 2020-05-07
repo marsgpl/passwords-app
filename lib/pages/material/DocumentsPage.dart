@@ -14,7 +14,7 @@ class DocumentsPageState extends State<DocumentsPage> {
     void initState() {
         super.initState();
 
-        AppStateModel model = Provider.of<AppStateModel>(context, listen: false);
+        final model = Provider.of<AppStateModel>(context, listen: false);
 
         model.initDocuments();
     }

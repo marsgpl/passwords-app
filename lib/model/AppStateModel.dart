@@ -22,6 +22,9 @@ class AppStateModel extends foundation.ChangeNotifier {
     final Biometrics biometrics = Biometrics();
     final Cryptography crypto = Cryptography();
 
+    bool isBiometricAuthRequired;
+    bool isBiometricAuthed;
+
     String loginsFilter = '';
     String bankCardsFilter = '';
     String documentsFilter = '';
@@ -101,12 +104,14 @@ class AppStateModel extends foundation.ChangeNotifier {
     }
 
     Future<void> initLocalStorageInitialData() async {
+        if (localStorageInitialData != null) return;
         localStorageInitialData = await storage.readAll();
     }
 
     Future<void> initCrypto() async {
         if (crypto.isInited) return;
-        if (localStorageInitialData == null) await initLocalStorageInitialData();
+
+        await initLocalStorageInitialData();
 
         await crypto.init(localStorageInitialData);
     }
@@ -115,15 +120,17 @@ class AppStateModel extends foundation.ChangeNotifier {
         if (biometrics.isInited) return;
 
         await biometrics.init();
+
+        notifyListeners();
     }
 
     Future<void> initLogins() async {
         if (logins.isInited) return;
-        if (localStorageInitialData == null) await initLocalStorageInitialData();
-        if (!crypto.isInited) await initCrypto();
 
-        logins.crypto = crypto;
-        await logins.init(localStorageInitialData);
+        await initLocalStorageInitialData();
+        await initCrypto();
+
+        await logins.init(localStorageInitialData, crypto);
 
         filterLoginsVisibleIds();
         notifyListeners();
@@ -131,11 +138,11 @@ class AppStateModel extends foundation.ChangeNotifier {
 
     Future<void> initBankCards() async {
         if (bankCards.isInited) return;
-        if (localStorageInitialData == null) await initLocalStorageInitialData();
-        if (!crypto.isInited) await initCrypto();
 
-        bankCards.crypto = crypto;
-        await bankCards.init(localStorageInitialData);
+        await initLocalStorageInitialData();
+        await initCrypto();
+
+        await bankCards.init(localStorageInitialData, crypto);
 
         // TODO filterBankCardsVisibleIds();
         notifyListeners();
@@ -143,11 +150,11 @@ class AppStateModel extends foundation.ChangeNotifier {
 
     Future<void> initDocuments() async {
         if (documents.isInited) return;
-        if (localStorageInitialData == null) await initLocalStorageInitialData();
-        if (!crypto.isInited) await initCrypto();
 
-        documents.crypto = crypto;
-        await documents.init(localStorageInitialData);
+        await initLocalStorageInitialData();
+        await initCrypto();
+
+        await documents.init(localStorageInitialData, crypto);
 
         // TODO filterDocumentsVisibleIds();
         notifyListeners();
@@ -155,7 +162,8 @@ class AppStateModel extends foundation.ChangeNotifier {
 
     Future<void> initSettings() async {
         if (settings.isInited) return;
-        if (localStorageInitialData == null) await initLocalStorageInitialData();
+
+        await initLocalStorageInitialData();
 
         await settings.init(localStorageInitialData);
 
@@ -164,5 +172,42 @@ class AppStateModel extends foundation.ChangeNotifier {
 
     Future<void> saveSettings() async {
         await settings.save();
+
+        notifyListeners();
+    }
+
+    void resetBiometricAuth() {
+        isBiometricAuthRequired = null;
+        isBiometricAuthed = null;
+
+        biometrics.reset();
+
+        notifyListeners();
+    }
+
+    Future<bool> biometricAuth({
+        bool reset: false
+    }) async {
+        if (reset) resetBiometricAuth();
+
+        await Future.wait([
+            initSettings(),
+            initBiometrics(),
+        ]);
+
+        final conf = settings.settings;
+
+        isBiometricAuthRequired = conf.isFaceIdEnabled || conf.isTouchIdEnabled;
+        isBiometricAuthed = await biometrics.challenge();
+
+        notifyListeners();
+
+        return isBiometricAuthed;
+    }
+
+    Future<void> resetSettings() async {
+        await settings.reset();
+
+        notifyListeners();
     }
 }

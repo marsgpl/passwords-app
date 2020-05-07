@@ -6,12 +6,13 @@ class MaterialPasswordsApp extends StatelessWidget {
     @override
     Widget build(BuildContext context) {
         return MaterialApp(
-            // debugShowCheckedModeBanner: false,
             title: APP_TITLE,
+            home: TabsPage(),
             theme: ThemeData(
                 primarySwatch: PRIMARY_COLOR,
+                platform: TargetPlatform.iOS,
             ),
-            home: TabsPage(),
+            // debugShowCheckedModeBanner: false,
         );
     }
 }
