@@ -189,14 +189,17 @@ class SettingsPageState extends BasePageState<SettingsPage> {
                 singleUpdate: true,
                 forceChallenge: true,
             );
+
             if (!success) {
-                resetBiometrics();
+                await resetBiometrics();
+
                 return alert(
                     title: 'Face ID failed',
                     message: 'Make sure you have Face ID enabled for this app in system settings',
                 );
             }
         }
+
         final conf = model.settings.settings;
         conf.isFaceIdEnabled = enabled;
         await model.saveSettings();
@@ -208,14 +211,17 @@ class SettingsPageState extends BasePageState<SettingsPage> {
                 singleUpdate: true,
                 forceChallenge: true,
             );
+
             if (!success) {
-                resetBiometrics();
+                await resetBiometrics();
+
                 return alert(
                     title: 'Touch ID failed',
                     message: 'Make sure you have Touch ID enabled for this app in system settings',
                 );
             }
         }
+
         final conf = model.settings.settings;
         conf.isTouchIdEnabled = enabled;
         await model.saveSettings();

@@ -210,9 +210,13 @@ class AppStateModel extends foundation.ChangeNotifier {
 
         if ((isBiometricAuthRequired || forceChallenge) && !skipChallenge) {
             isBiometricAuthSucceed = await biometrics.challenge();
+        } else {
+            isBiometricAuthSucceed = false;
         }
 
         notifyListeners();
+
+        return isBiometricAuthSucceed;
     }
 
     Future<void> resetSettings() async {

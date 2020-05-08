@@ -73,7 +73,7 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
 
     Widget buildBody() => Consumer<AppStateModel>(
         builder: (context, model, consumer) {
-            if (model.isBiometricAuthRequired == null) {
+            if (model.isBiometricAuthRequired == null || model.isBiometricAuthSucceed == null) {
                 return buildBodyLoading();
             } else if (!model.isBiometricAuthRequired || model.isBiometricAuthSucceed) {
                 return buildBodyPages();
@@ -154,7 +154,8 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
 
     Widget buildBottomNavBar() => Consumer<AppStateModel>(
         builder: (context, model, consumer) {
-            if (model.isBiometricAuthRequired == null || // pending init/auth
+            if (model.isBiometricAuthRequired == null || // pending init
+                model.isBiometricAuthSucceed == null || // pending auth
                 (model.isBiometricAuthRequired && !model.isBiometricAuthSucceed) // failed auth
             ) {
                 return buildBottomNavBarEmpty();
