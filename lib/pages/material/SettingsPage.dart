@@ -1,8 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:passwords/constants.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/pages/material/BasePage.dart';
@@ -130,14 +127,16 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         trailing: IconButton(
             icon: const Icon(Icons.refresh),
             color: Colors.grey,
-            onPressed: biometricAuthRetry,
+            onPressed: () async {
+                await resetBiometrics();
+                snack(message: 'Biometrics reloaded');
+            },
         ),
     );
 
-    Future<void> biometricAuthRetry() async {
+    Future<void> resetBiometrics() async {
         final model = Provider.of<AppStateModel>(context, listen: false);
-        await model.biometricAuth(reset: true);
-        snack(message: 'Biometrics reloaded');
+        await model.biometricAuth(reset: true, singleUpdate: true, skipChallenge: true);
     }
 
     Widget rowBiometricsFaceId(AppStateModel model) {
@@ -186,8 +185,12 @@ class SettingsPageState extends BasePageState<SettingsPage> {
 
     Future<void> setSettingIsFaceIdEnabled(AppStateModel model, bool enabled) async {
         if (enabled) {
-            bool success = await model.biometricAuth();
+            bool success = await model.biometricAuth(
+                singleUpdate: true,
+                forceChallenge: true,
+            );
             if (!success) {
+                resetBiometrics();
                 return alert(
                     title: 'Face ID failed',
                     message: 'Make sure you have Face ID enabled for this app in system settings',
@@ -201,8 +204,12 @@ class SettingsPageState extends BasePageState<SettingsPage> {
 
     Future<void> setSettingIsTouchIdEnabled(AppStateModel model, bool enabled) async {
         if (enabled) {
-            bool success = await model.biometricAuth();
+            bool success = await model.biometricAuth(
+                singleUpdate: true,
+                forceChallenge: true,
+            );
             if (!success) {
+                resetBiometrics();
                 return alert(
                     title: 'Touch ID failed',
                     message: 'Make sure you have Touch ID enabled for this app in system settings',
@@ -251,7 +258,7 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         onAccept: resetSettingsConfirmed,
     );
 
-    Future<void> resetSettingsConfirmed(AppStateModel model) async {
+    Future<void> resetSettingsConfirmed() async {
         final model = Provider.of<AppStateModel>(context, listen: false);
         await model.resetSettings();
     }
@@ -394,17 +401,6 @@ class SettingsPageState extends BasePageState<SettingsPage> {
     //     await model.eraseAllData();
     // }
 
-    // Future<void> eraseAllWithRandom() async {
-    //     FlutterSecureStorage storage = settings.storage;
-    //     Map<String, String> kvs = await storage.readAll();
-
-    //     for (String key in kvs.keys) {
-    //         await storage.write(
-    //             key: key,
-    //             value: generateRandomPassword(length: kvs[key].length),
-    //         );
-    //     }
-    // }
 
 
     // Future<String> dumpAllData() async {

@@ -4,14 +4,14 @@ class Document implements Comparable<Document> {
     Document({
         id,
         createdAt,
-        this.title,
+        this.title = '',
     }) :
         id = id ?? Uuid().v4(),
         createdAt = createdAt ?? DateTime.now();
 
     final String id;
     final DateTime createdAt;
-    String title = '';
+    String title;
 
     @override
     String toString() => '*Document(id: $id)';

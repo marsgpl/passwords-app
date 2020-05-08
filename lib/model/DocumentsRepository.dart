@@ -26,6 +26,7 @@ class DocumentsRepository {
             try {
                 Document item = Document.fromJson(json.decode(crypto.decrypt(localStorageInitialData[key])));
                 items[item.id] = item;
+                localStorageInitialData.remove(key);
             } catch(error) {
                 print('Document init from key "$key" error: $error');
             }
@@ -51,7 +52,6 @@ class DocumentsRepository {
     Future<void> deleteItem(Document item) async {
         String key = storageItemKeyPrefix + item.id;
 
-        await storage.write(key: key, value: generateRandomPassword(length: 256));
         await storage.delete(key: key);
 
         items.remove(item.id);

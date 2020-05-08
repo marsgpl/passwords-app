@@ -10,6 +10,8 @@ class Biometrics {
 
     void reset() {
         localAuth = null;
+        isFaceIdSupported = null;
+        isTouchIdSupported = null;
     }
 
     Future<void> init() async {

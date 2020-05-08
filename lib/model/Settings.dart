@@ -4,20 +4,20 @@ class Settings {
     Settings({
         id,
         createdAt,
-        this.howToCopyPasswordTipHidden,
-        this.useSpecialSymbolsInGeneratedPasswords,
-        this.isFaceIdEnabled,
-        this.isTouchIdEnabled,
+        this.howToCopyPasswordTipHidden = false,
+        this.useSpecialSymbolsInGeneratedPasswords = false,
+        this.isFaceIdEnabled = false,
+        this.isTouchIdEnabled = false,
     }) :
         id = id ?? Uuid().v4(),
         createdAt = createdAt ?? DateTime.now();
 
     final String id;
     final DateTime createdAt;
-    bool howToCopyPasswordTipHidden = false;
-    bool useSpecialSymbolsInGeneratedPasswords = false;
-    bool isFaceIdEnabled = false;
-    bool isTouchIdEnabled = false;
+    bool howToCopyPasswordTipHidden;
+    bool useSpecialSymbolsInGeneratedPasswords;
+    bool isFaceIdEnabled;
+    bool isTouchIdEnabled;
 
     @override
     String toString() => '*Settings(id: $id)';

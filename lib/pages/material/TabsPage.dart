@@ -7,6 +7,8 @@ import 'package:passwords/widgets/PageMessage.dart';
 import 'package:passwords/pages/material/SettingsPage.dart';
 
 class TabsPage extends StatefulWidget {
+    static final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
+
     @override
     TabsPageState createState() => TabsPageState();
 }
@@ -64,6 +66,7 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
 
     @override
     Widget build(BuildContext context) => Scaffold(
+        key: TabsPage.scaffoldKey,
         body: buildBody(),
         bottomNavigationBar: buildBottomNavBar(),
     );
@@ -72,7 +75,7 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
         builder: (context, model, consumer) {
             if (model.isBiometricAuthRequired == null) {
                 return buildBodyLoading();
-            } else if (!model.isBiometricAuthRequired || model.isBiometricAuthed) {
+            } else if (!model.isBiometricAuthRequired || model.isBiometricAuthSucceed) {
                 return buildBodyPages();
             } else if (!model.biometrics.isSupported) {
                 return buildBodyBiometricsDisabledButRequired(model);
@@ -151,13 +154,12 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
 
     Widget buildBottomNavBar() => Consumer<AppStateModel>(
         builder: (context, model, consumer) {
-            if (
-                model.isBiometricAuthRequired != null &&
-                (!model.isBiometricAuthRequired || model.isBiometricAuthed)
+            if (model.isBiometricAuthRequired == null || // pending init/auth
+                (model.isBiometricAuthRequired && !model.isBiometricAuthSucceed) // failed auth
             ) {
-                return buildBottomNavBarPages();
-            } else {
                 return buildBottomNavBarEmpty();
+            } else {
+                return buildBottomNavBarPages();
             }
         }
     );
@@ -188,17 +190,34 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.grey[200],
         selectedItemColor: PRIMARY_COLOR,
-        unselectedItemColor: Colors.grey[500],
+        unselectedItemColor: Colors.grey[600],
         selectedFontSize: 12,
         unselectedFontSize: 12,
     );
 
     Widget buildBottomNavBarEmpty() => BottomNavigationBar(
-        items: [],
+        items: [
+            BottomNavigationBarItem(
+                icon: Container(),
+                title: Container(),
+            ),
+            BottomNavigationBarItem(
+                icon: Container(),
+                title: Container(),
+            ),
+            BottomNavigationBarItem(
+                icon: Container(),
+                title: Container(),
+            ),
+            BottomNavigationBarItem(
+                icon: Container(),
+                title: Container(),
+            ),
+        ],
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.grey[200],
         selectedItemColor: PRIMARY_COLOR,
-        unselectedItemColor: Colors.grey[500],
+        unselectedItemColor: Colors.grey[600],
         selectedFontSize: 12,
         unselectedFontSize: 12,
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:passwords/constants.dart';
+import 'package:passwords/pages/material/TabsPage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BasePageState<T extends StatefulWidget> extends State<T> {
@@ -27,10 +28,9 @@ class BasePageState<T extends StatefulWidget> extends State<T> {
     }
 
     void snack({
-        BuildContext context,
         String message,
     }) {
-        Scaffold.of(context ?? this.context).showSnackBar(SnackBar(content: Text(message)));
+        TabsPage.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(message)));
     }
 
     Future<void> alert({

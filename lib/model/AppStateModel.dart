@@ -23,7 +23,7 @@ class AppStateModel extends foundation.ChangeNotifier {
     final Cryptography crypto = Cryptography();
 
     bool isBiometricAuthRequired;
-    bool isBiometricAuthed;
+    bool isBiometricAuthSucceed;
 
     String loginsFilter = '';
     String bankCardsFilter = '';
@@ -33,9 +33,9 @@ class AppStateModel extends foundation.ChangeNotifier {
     List<String> bankCardsFilterChunks = [];
     List<String> documentsFilterChunks = [];
 
-    List<String> loginsVisibleIds;
-    List<String> bankCardsVisibleIds;
-    List<String> documentsVisibleIds;
+    List<String> loginsVisibleIds = [];
+    List<String> bankCardsVisibleIds = [];
+    List<String> documentsVisibleIds = [];
 
     bool loginsNotFoundBySearch() =>
         logins.isInited &&
@@ -116,12 +116,14 @@ class AppStateModel extends foundation.ChangeNotifier {
         await crypto.init(localStorageInitialData);
     }
 
-    Future<void> initBiometrics() async {
+    Future<void> initBiometrics({
+        bool silent = false,
+    }) async {
         if (biometrics.isInited) return;
 
         await biometrics.init();
 
-        notifyListeners();
+        if (!silent) notifyListeners();
     }
 
     Future<void> initLogins() async {
@@ -160,14 +162,16 @@ class AppStateModel extends foundation.ChangeNotifier {
         notifyListeners();
     }
 
-    Future<void> initSettings() async {
+    Future<void> initSettings({
+        bool silent = false,
+    }) async {
         if (settings.isInited) return;
 
         await initLocalStorageInitialData();
 
         await settings.init(localStorageInitialData);
 
-        notifyListeners();
+        if (!silent) notifyListeners();
     }
 
     Future<void> saveSettings() async {
@@ -176,33 +180,39 @@ class AppStateModel extends foundation.ChangeNotifier {
         notifyListeners();
     }
 
-    void resetBiometricAuth() {
+    void resetBiometrics({
+        bool silent = false,
+    }) {
         isBiometricAuthRequired = null;
-        isBiometricAuthed = null;
+        isBiometricAuthSucceed = null;
 
         biometrics.reset();
 
-        notifyListeners();
+        if (!silent) notifyListeners();
     }
 
     Future<bool> biometricAuth({
-        bool reset: false
+        bool reset: false,
+        bool singleUpdate: false, // call notifyListeners only at the end
+        bool skipChallenge: false,
+        bool forceChallenge: false,
     }) async {
-        if (reset) resetBiometricAuth();
+        if (reset) resetBiometrics(silent: singleUpdate);
 
         await Future.wait([
-            initSettings(),
-            initBiometrics(),
+            initBiometrics(silent: singleUpdate),
+            initSettings(silent: singleUpdate),
         ]);
 
         final conf = settings.settings;
 
         isBiometricAuthRequired = conf.isFaceIdEnabled || conf.isTouchIdEnabled;
-        isBiometricAuthed = await biometrics.challenge();
+
+        if ((isBiometricAuthRequired || forceChallenge) && !skipChallenge) {
+            isBiometricAuthSucceed = await biometrics.challenge();
+        }
 
         notifyListeners();
-
-        return isBiometricAuthed;
     }
 
     Future<void> resetSettings() async {

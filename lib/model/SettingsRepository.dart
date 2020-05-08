@@ -14,6 +14,7 @@ class SettingsRepository {
 
         try {
             settings = Settings.fromJson(json.decode(localStorageInitialData[storageKey]));
+            localStorageInitialData.remove(storageKey);
         } catch (error) {
             tasks.add(reset());
 

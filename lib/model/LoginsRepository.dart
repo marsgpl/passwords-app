@@ -26,6 +26,7 @@ class LoginsRepository {
             try {
                 Login item = Login.fromJson(json.decode(crypto.decrypt(localStorageInitialData[key])));
                 items[item.id] = item;
+                localStorageInitialData.remove(key);
             } catch(error) {
                 print('Login init from key "$key" error: $error');
             }
@@ -51,7 +52,6 @@ class LoginsRepository {
     Future<void> deleteItem(Login item) async {
         String key = storageItemKeyPrefix + item.id;
 
-        await storage.write(key: key, value: generateRandomPassword(length: 256));
         await storage.delete(key: key);
 
         items.remove(item.id);

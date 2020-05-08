@@ -4,7 +4,7 @@ class Login implements Comparable<Login> {
     Login({
         id,
         createdAt,
-        this.title,
+        this.title = '',
         this.login,
         this.password,
         this.website,
@@ -17,7 +17,7 @@ class Login implements Comparable<Login> {
 
     final String id;
     final DateTime createdAt;
-    String title = '';
+    String title;
     String login;
     String password;
     String website;
