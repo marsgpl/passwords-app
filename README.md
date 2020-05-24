@@ -15,6 +15,7 @@
     open -a Simulator
     flutter run
     flutter run -d 'iPhone 11 Pro Max'
+    flutter run -d 'iPhone 8'
     flutter run -d marsgpl --release
 
 ## Height percent of parent container

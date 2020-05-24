@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:passwords/constants.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:passwords/constants.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/pages/material/BasePage.dart';
+
+const PRIVACY_POLICY_URL = 'https://eki.one/passwords/PrivacyPolicy.html';
 
 class SettingsPage extends StatefulWidget {
     @override
@@ -16,8 +22,8 @@ class SettingsPageState extends BasePageState<SettingsPage> {
 
         final model = Provider.of<AppStateModel>(context, listen: false);
 
-        model.initSettings();
         model.initBiometrics();
+        model.initSettings();
     }
 
     @override
@@ -57,10 +63,11 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         children.add(rowAbout());
         children.add(rowBiometrics(model));
         children.add(rowPasswordGeneratorStrength(model));
-        // children.add(rowDownloadBackup());
-        // children.add(rowRestoreFromBackup());
+        children.add(rowDownloadBackup());
+        children.add(rowRestoreFromBackup());
         children.add(rowResetUISettings());
-        // children.add(rowPurge());
+        children.add(rowEraseAllData());
+        children.add(rowPrivacyPolicy());
 
         return ListView(
             semanticChildCount: children.length,
@@ -83,6 +90,7 @@ class SettingsPageState extends BasePageState<SettingsPage> {
         key: Key('howToCopyPasswordTipImage'),
         image: AssetImage('assets/swipe.gif'),
         alignment: Alignment.topLeft,
+        height: 52,
     );
 
     Future<void> hideHowToCopyPasswordTip() async {
@@ -102,7 +110,7 @@ class SettingsPageState extends BasePageState<SettingsPage> {
 
     void showAbout() => alert(
         title: APP_TITLE,
-        message: 'All stored data is encrypted with strong symmetric cryptography (aes-256-cfb)\n\nBefore removal, data is replaced with random noise bytes to make it impossible to restore directly by scanning the storage with special tools',
+        message: 'All stored passwords, bank cards and documents are encrypted with strong symmetric cryptography.',
     );
 
     Widget rowBiometrics(AppStateModel model) {
@@ -253,187 +261,142 @@ class SettingsPageState extends BasePageState<SettingsPage> {
     Widget rowResetUISettings() => ListTile(
         key: Key('rowResetUISettings'),
         leading: const Icon(Icons.refresh),
-        title: const Text('Reset UI settings'),
+        title: const Text('Reset interface settings'),
         onTap: resetUISettings,
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
     );
 
     void resetUISettings() => confirm(
-        title: 'Reset UI settings?',
-        message: 'Other sensitive data will remain unchanged',
+        title: 'Reset settings?',
+        message: 'Only interface settings will be resetted. Other sensitive data like passwords will remain untouched.',
         onAccept: resetSettingsConfirmed,
     );
 
     Future<void> resetSettingsConfirmed() async {
         final model = Provider.of<AppStateModel>(context, listen: false);
-        await model.resetSettings();
+        await model.reinitSettings();
+        snack(message: 'Interface settings were resetted');
+    }
+
+    Widget rowPrivacyPolicy() => ListTile(
+        key: Key('rowPrivacyPolicy'),
+        leading: const Icon(Icons.public),
+        title: const Text('Privacy Policy'),
+        subtitle: const Text('Open in browser'),
+        onTap: showPrivacyPolicy,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+    );
+
+    Future<void> showPrivacyPolicy() async {
+        await openUrl(PRIVACY_POLICY_URL);
+    }
+
+    Widget rowEraseAllData() => ListTile(
+        key: Key('rowEraseAllData'),
+        leading: const Icon(Icons.delete_forever, color: Colors.red),
+        title: const Text('Erase all data', style: const TextStyle(color: Colors.red)),
+        onTap: eraseAllData,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+    );
+
+    Future<void> eraseAllData() => confirm(
+        title: 'Warning: are you sure?',
+        message: 'All your saved passwords, bank cards, documents, attached photos and interface settings will be permanently removed from this device.\n\nMake sure you have a backup.',
+        titleIsCritical: true,
+        isAcceptCritical: true,
+        onAccept: eraseAllDataConfirmed,
+    );
+
+    Future<void> eraseAllDataConfirmed() async {
+        final model = Provider.of<AppStateModel>(context, listen: false);
+        await model.eraseAllData(silent: true);
+        await model.initSettings(silent: true);
+        await model.biometricAuth(singleUpdate: true);
+        snack(message: 'All data was erased');
+    }
+
+    Widget rowDownloadBackup() {
+        return ListTile(
+            key: Key('rowDownloadBackup'),
+            leading: const Icon(Icons.cloud_download),
+            title: const Text('Download backup file'),
+            subtitle: const Text('File contents will be encrypted'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+            onTap: downloadBackup,
+        );
+    }
+
+    Widget rowRestoreFromBackup() {
+        return ListTile(
+            key: Key('rowRestoreFromBackup'),
+            leading: const Icon(Icons.cloud_upload, color: Colors.red),
+            title: const Text('Restore from backup file', style: const TextStyle(color: Colors.red)),
+            subtitle: const Text('Warning: it will erase all current data'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+            onTap: restoreFromBackup,
+        );
+    }
+
+    Future<void> downloadBackup() async {
+        try {
+            final model = Provider.of<AppStateModel>(context, listen: false);
+
+            final tmpDir = await getTemporaryDirectory();
+            final bkpFileData = await model.dumpAllDataExceptSettings();
+            final bkpFileName = 'passwords-backup.pb';
+            final bkpFilePath = '${tmpDir.path}/$bkpFileName';
+            final bkpFile = File(bkpFilePath);
+            await bkpFile.writeAsString(bkpFileData);
+
+            final params = SaveFileDialogParams(sourceFilePath: bkpFile.path);
+            String path = await FlutterFileDialog.saveFile(params: params);
+
+            if (path != null) {
+                snack(message: 'File saved');
+            }
+
+            await bkpFile.delete();
+        } catch (error) {
+            alert(message: 'Something went wrong');
+            print('error: $error');
+        }
+    }
+
+    Future<void> restoreFromBackup() => confirm(
+        title: 'Warning: are you sure?',
+        message: 'Imported backup will erase all your currently saved passwords, bank cards, documents and settings',
+        titleIsCritical: true,
+        isAcceptCritical: true,
+        onAccept: restoreFromBackupConfirmed,
+    );
+
+    Future<void> restoreFromBackupConfirmed() async {
+        File bkpFile;
+
+        try {
+            final model = Provider.of<AppStateModel>(context, listen: false);
+
+            final params = OpenFileDialogParams(
+                dialogType: OpenFileDialogType.document,
+            );
+
+            String bkpFilePath = await FlutterFileDialog.pickFile(params: params);
+            bkpFile = File(bkpFilePath);
+
+            String jsonEncoded = await bkpFile.readAsString();
+
+            await model.restoreFromBackup(jsonEncoded);
+
+            snack(message: 'Restored from backup');
+        } catch (error) {
+            if (bkpFile != null) {
+                alert(message: 'Something went wrong');
+                print('error: $error');
+            }
+        } finally {
+            if (bkpFile != null) {
+                await bkpFile.delete();
+            }
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Widget rowPurge(AppStateModel model) => ListTile(
-    //     key: Key('rowPurge'),
-    //     leading: const Icon(Icons.delete_forever, color: Colors.red),
-    //     title: const Text('Erase all data', style: const TextStyle(color: Colors.red)),
-    //     onTap: () => eraseAllData(model),
-    //     contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-    // );
-
-    // Widget rowDownloadBackup(AppStateModel model) {
-    //     return ListTile(
-    //         key: Key('rowDownloadBackup'),
-    //         leading: const Icon(Icons.cloud_download),
-    //         title: const Text('Create backup file'),
-    //         subtitle: const Text('File contents will be encrypted'),
-    //         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-    //         onTap: () => downloadBackup(model),
-    //     );
-    // }
-
-    // Widget rowRestoreFromBackup(AppStateModel model) {
-    //     return ListTile(
-    //         key: Key('rowRestoreFromBackup'),
-    //         leading: const Icon(Icons.cloud_upload, color: Colors.red),
-    //         title: const Text('Restore from backup file', style: const TextStyle(color: Colors.red)),
-    //         subtitle: const Text('Warning: it will erase all current data'),
-    //         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-    //         onTap: () => restoreFromBackup(model),
-    //     );
-    // }
-
-    // Future<void> restoreFromBackup(AppStateModel model) => confirm(
-    //     title: 'Warning: are you sure?',
-    //     message: 'Imported backup will erase all your currently saved logins, bank cards, documents and settings',
-    //     titleIsCritical: true,
-    //     isAcceptCritical: true,
-    //     onAccept: () => restoreFromBackupConfirmed(model),
-    // );
-
-    // Future<void> restoreFromBackupConfirmed(AppStateModel model) async {
-    //     File bkpFile;
-
-    //     try {
-    //         final params = OpenFileDialogParams(
-    //             dialogType: OpenFileDialogType.document,
-    //         );
-    //         String bkpFilePath = await FlutterFileDialog.pickFile(params: params);
-    //         bkpFile = File(bkpFilePath);
-    //         String jsonEncoded = await bkpFile.readAsString();
-    //         await model.restoreFromBackup(jsonEncoded);
-    //         await model.reinitAll();
-    //         snack(message: 'Restored from backup');
-    //     } catch (error) {
-    //         if (bkpFile != null) {
-    //             alert(message: 'Something went wrong');
-    //             print('error: $error');
-    //         }
-    //     } finally {
-    //         if (bkpFile != null) {
-    //             await bkpFile.delete();
-    //         }
-    //     }
-    // }
-
-    // Future<void> downloadBackup(AppStateModel model) async {
-    //     try {
-    //         final tmpDir = await getTemporaryDirectory();
-    //         final bkpFileData = await model.dumpAllData();
-    //         final bkpFileName = 'passwords-backup.pb';
-    //         final bkpFilePath = '${tmpDir.path}/$bkpFileName';
-    //         final bkpFile = File(bkpFilePath);
-    //         await bkpFile.writeAsString(bkpFileData);
-
-    //         final params = SaveFileDialogParams(sourceFilePath: bkpFile.path);
-    //         String path = await FlutterFileDialog.saveFile(params: params);
-
-    //         await bkpFile.delete();
-
-    //         if (path != null) {
-    //             snack(message: 'File saved');
-    //         }
-    //     } catch (error) {
-    //         alert(message: 'Something went wrong');
-    //         print('error: $error');
-    //     }
-    // }
-
-    // Future<void> eraseAllData(AppStateModel model) => confirm(
-    //     title: 'Warning: are you sure?',
-    //     message: 'All your saved logins, passwords, bank cards, documents, attached photos and UI settings will be permanently removed from this device\n\nMake sure you have a backup',
-    //     titleIsCritical: true,
-    //     isAcceptCritical: true,
-    //     onAccept: () => eraseAllDataConfirmed(model),
-    // );
-
-    // Future<void> eraseAllDataConfirmed(AppStateModel model) async {
-    //     await model.eraseAllData();
-    // }
-
-
-
-    // Future<String> dumpAllData() async {
-    //     FlutterSecureStorage storage = settings.storage;
-    //     Map<String, String> kvs = await storage.readAll();
-
-    //     List<String> lines = [];
-
-    //     for (String key in kvs.keys) {
-    //         String value = kvs[key].replaceAll(jsonStringEscape, '\\"');
-
-    //         lines.add('"$key": "$value"');
-    //     }
-
-    //     return '{${lines.join(',\n')}}\n';
-    // }
-
-    // Future<void> restoreFromBackup(String jsonEncoded) async {
-    //     FlutterSecureStorage storage = settings.storage;
-    //     Map<String, dynamic> kvs = json.decode(jsonEncoded);
-
-    //     await settings.storage.deleteAll();
-
-    //     for (String key in kvs.keys) {
-    //         await storage.write(
-    //             key: key,
-    //             value: kvs[key],
-    //         );
-    //     }
-    // }

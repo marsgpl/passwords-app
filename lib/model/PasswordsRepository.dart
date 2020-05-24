@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:passwords/model/Cryptography.dart';
-import 'package:passwords/model/Login.dart';
-import 'package:passwords/helpers/generateRandomPassword.dart';
+import 'package:passwords/model/Password.dart';
 
-class LoginsRepository {
+class PasswordsRepository {
     final FlutterSecureStorage storage = FlutterSecureStorage();
-    Map<String, Login> items;
+    Map<String, Password> items;
     Map<String, String> search;
-    String storageItemKeyPrefix = 'Login.';
+    String storageItemKeyPrefix = 'Password.';
     Cryptography crypto;
 
     bool get isInited => items != null;
@@ -24,32 +23,36 @@ class LoginsRepository {
             if (key.substring(0, storageItemKeyPrefix.length) != storageItemKeyPrefix) continue;
 
             try {
-                Login item = Login.fromJson(json.decode(crypto.decrypt(localStorageInitialData[key])));
+                Password item = Password.fromJson(json.decode(crypto.decrypt(localStorageInitialData[key])));
                 items[item.id] = item;
-                localStorageInitialData.remove(key);
             } catch(error) {
-                print('Login init from key "$key" error: $error');
+                print('Password init from key "$key" error: $error');
             }
         }
 
         buildSearch();
     }
 
-    Login getItemById(String id) {
+    void reset() {
+        items = null;
+        search = null;
+    }
+
+    Password getItemById(String id) {
         return items[id];
     }
 
-    Future<void> saveItem(Login item) async {
+    Future<void> saveItem(Password item) async {
         String key = storageItemKeyPrefix + item.id;
         String value = crypto.encrypt(json.encode(item.toJson()));
 
         await storage.write(key: key, value: value);
 
         items[item.id] = item;
-        buildSearchForItem(item);
+        search[item.id] = buildSearchForItem(item);
     }
 
-    Future<void> deleteItem(Login item) async {
+    Future<void> deleteItem(Password item) async {
         String key = storageItemKeyPrefix + item.id;
 
         await storage.delete(key: key);
@@ -66,7 +69,7 @@ class LoginsRepository {
         });
     }
 
-    String buildSearchForItem(Login item) {
+    String buildSearchForItem(Password item) {
         List<String> search = [];
 
         if (item.title != null && item.title.length > 0) search.add(item.title.toLowerCase());

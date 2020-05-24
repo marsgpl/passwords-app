@@ -11,7 +11,7 @@
 ///      fonts:
 ///       - asset: fonts/PwdIcons.ttf
 ///
-/// 
+///
 /// * Material Design Icons, Copyright (C) Google, Inc
 ///         Author:    Google
 ///         License:   Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
@@ -37,7 +37,7 @@ class PwdIcons {
   static const _kFontFam = 'PwdIcons';
   static const _kFontPkg = null;
 
-  static const IconData login = IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData password = IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData settings = IconData(0xe801, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData document = IconData(0xe803, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData bank_card = IconData(0xe812, fontFamily: _kFontFam, fontPackage: _kFontPkg);

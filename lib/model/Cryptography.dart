@@ -34,6 +34,16 @@ class Cryptography {
         ]);
     }
 
+    void reset() {
+        symmetricKey = null;
+        symmetricKeyInitVector = null;
+        encrypter = null;
+        key = null;
+        iv = null;
+
+        isInited = false;
+    }
+
     Future<void> initDecoys(Map<String, String> localStorageInitialData) async {
         final List<Future<void>> tasks = [];
 
@@ -46,8 +56,6 @@ class Cryptography {
                     SYMMETRIC_KEY_INIT_VECTOR_LENGTH);
 
                 tasks.add(storage.write(key: key, value: value));
-            } else {
-                localStorageInitialData.remove(key);
             }
         }
 
@@ -61,9 +69,6 @@ class Cryptography {
 
         symmetricKey = localStorageInitialData[SYMMETRIC_KEY_STORAGE_KEY];
         symmetricKeyInitVector = localStorageInitialData[SYMMETRIC_KEY_INIT_VECTOR_STORAGE_KEY];
-
-        localStorageInitialData.remove(SYMMETRIC_KEY_STORAGE_KEY);
-        localStorageInitialData.remove(SYMMETRIC_KEY_INIT_VECTOR_STORAGE_KEY);
 
         if (symmetricKey == null) {
             symmetricKey = generateRandomPassword(length: SYMMETRIC_KEY_LENGTH);

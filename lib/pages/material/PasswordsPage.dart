@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:passwords/widgets/PageMessage.dart';
+import 'package:passwords/PwdIcons.dart';
 import 'package:passwords/widgets/NewItemArrowPainter.dart';
-import 'package:passwords/helpers/Debouncer.dart';
-import 'package:passwords/model/Login.dart';
-import 'package:passwords/pages/material/BasePage.dart';
-import 'package:passwords/pages/material/LoginFormPage.dart';
 import 'package:passwords/model/AppStateModel.dart';
+import 'package:passwords/helpers/Debouncer.dart';
+import 'package:passwords/pages/material/BasePage.dart';
+import 'package:passwords/pages/material/PasswordFormPage.dart';
+import 'package:passwords/model/Password.dart';
 
-class LoginsPage extends StatefulWidget {
+class PasswordsPage extends StatefulWidget {
     @override
-    LoginsPageState createState() => LoginsPageState();
+    PasswordsPageState createState() => PasswordsPageState();
 }
 
-class LoginsPageState extends BasePageState<LoginsPage> {
+class PasswordsPageState extends BasePageState<PasswordsPage> {
     final searchDebouncer = Debouncer(milliseconds: 200);
     Function onSearch;
     Function onSearchInstant;
@@ -28,15 +30,15 @@ class LoginsPageState extends BasePageState<LoginsPage> {
 
         final model = Provider.of<AppStateModel>(context, listen: false);
 
-        model.initLogins();
+        model.initPasswords();
 
-        onSearchInstant = model.onLoginSearch;
+        onSearchInstant = model.onPasswordSearch;
 
         onSearch = (String searchText) =>
             searchDebouncer.run(() => onSearchInstant(searchText));
 
-        if (model.loginsFilter.length > 0) {
-            onSearchInstant('');
+        if (model.passwordsFilter.length > 0) {
+            onSearchInstant('', silent: true);
         }
     }
 
@@ -71,7 +73,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         if (!isSearching) {
             return GestureDetector(
                 onTap: openSearch,
-                child: const Text('Logins'),
+                child: const Text('Passwords'),
             );
         } else {
             return TextFormField(
@@ -83,7 +85,6 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                         color: Colors.white70,
                         fontSize: 20,
                     ),
-                    hasFloatingPlaceholder: false,
                     isDense: false,
                     border: InputBorder.none,
                 ),
@@ -135,7 +136,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
             return [
                 IconButton(
                     color: Colors.white,
-                    onPressed: () => gotoAddLoginPage(context),
+                    onPressed: () => gotoAddPasswordPage(context),
                     tooltip: 'Create',
                     icon: const Icon(Icons.add, size: 26),
                 ),
@@ -145,18 +146,18 @@ class LoginsPageState extends BasePageState<LoginsPage> {
 
     Widget buildBody() => Consumer<AppStateModel>(
         builder: (context, model, consumer) {
-            if (!model.loginsInited) {
+            if (!model.passwords.isInited) {
                 return buildBodyLoading();
-            } else if (model.loginsNotFoundBySearch()) {
+            } else if (model.passwordsNotFoundBySearch()) {
                 return buildBodyNotFoundBySearch(model);
-            } else if (model.loginsNoItems()) {
+            } else if (model.passwordsNoItems()) {
                 if (isSearching) {
                     return buildBodyNotFoundBySearch(model);
                 } else {
                     return buildBodyNoItems();
                 }
             } else {
-                return buildBodyItems(model.loginsVisibleIds, model.logins.items);
+                return buildBodyItems(model.passwordsVisibleIds, model.passwords.items);
             }
         }
     );
@@ -166,7 +167,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
     );
 
     Widget buildBodyNotFoundBySearch(AppStateModel model) {
-        String filter = model.loginsFilter;
+        String filter = model.passwordsFilter;
 
         if (filter.length == 0) {
             return const Center(
@@ -197,7 +198,7 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                 heightFactor: 0.5,
                 child: Container(
                     child: CustomPaint(
-                        painter: NewItemArrowPainter(),
+                        painter: NewItemArrowPainter('Add password'),
                     ),
                 ),
             ),
@@ -205,15 +206,15 @@ class LoginsPageState extends BasePageState<LoginsPage> {
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                        const Text('Usernames and passwords'),
-                        const Text('For internet services'),
+                        const Icon(PwdIcons.password, color: Colors.black26, size: 60),
+                        PageMessage.paragraph('Logins and passwords\nfor websites'),
                     ],
                 ),
             ),
         ],
     );
 
-    Widget buildBodyItems(List<String> ids, Map<String, Login> items) {
+    Widget buildBodyItems(List<String> ids, Map<String, Password> items) {
         final rowsCount = ids.length * 2 - 1;
 
         return CustomScrollView(
@@ -241,16 +242,24 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         );
     }
 
-    Widget buildBodyItemsRow(Login item) => Slidable(
+    Widget buildBodyItemsRow(Password item) => Slidable(
         actionPane: const SlidableDrawerActionPane(),
         actionExtentRatio: 0.25,
         child: ListTile(
             key: Key(item.id),
-            title: Text(item.title),
-            subtitle: Text(item.login != null ? item.login : ''),
+            title: Text(
+                item.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+                item.login != null ? item.login : '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+            ),
             trailing: const Icon(Icons.chevron_right),
             contentPadding: const EdgeInsets.fromLTRB(18, 0, 12, 0),
-            onTap: () => gotoEditLoginPage(item),
+            onTap: () => gotoEditPasswordPage(item),
         ),
         actions: [
             IconSlideAction(
@@ -272,28 +281,28 @@ class LoginsPageState extends BasePageState<LoginsPage> {
         ],
     );
 
-    void copyLogin(Login item) {
+    void copyLogin(Password item) {
         Clipboard.setData(ClipboardData(text: item.login));
         snack(message: 'Login copied');
     }
 
-    void copyPassword(Login item) {
+    void copyPassword(Password item) {
         Clipboard.setData(ClipboardData(text: item.password));
         snack(message: 'Password copied');
     }
 
-    void gotoEditLoginPage(Login item) {
+    void gotoEditPasswordPage(Password item) {
         Navigator.of(context).push(
             MaterialPageRoute(
-                builder: (context) => LoginFormPage(item: item),
+                builder: (context) => PasswordFormPage(item: item),
             ),
         );
     }
 
-    void gotoAddLoginPage(BuildContext context) {
+    void gotoAddPasswordPage(BuildContext context) {
         Navigator.of(context).push(
             MaterialPageRoute(
-                builder: (context) => LoginFormPage(item: null),
+                builder: (context) => PasswordFormPage(item: null),
             ),
         );
     }

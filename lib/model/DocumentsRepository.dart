@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:passwords/model/Cryptography.dart';
 import 'package:passwords/model/Document.dart';
-import 'package:passwords/helpers/generateRandomPassword.dart';
 
 class DocumentsRepository {
     final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -26,13 +25,17 @@ class DocumentsRepository {
             try {
                 Document item = Document.fromJson(json.decode(crypto.decrypt(localStorageInitialData[key])));
                 items[item.id] = item;
-                localStorageInitialData.remove(key);
             } catch(error) {
                 print('Document init from key "$key" error: $error');
             }
         }
 
         buildSearch();
+    }
+
+    void reset() {
+        items = null;
+        search = null;
     }
 
     Document getItemById(String id) {
@@ -46,7 +49,7 @@ class DocumentsRepository {
         await storage.write(key: key, value: value);
 
         items[item.id] = item;
-        buildSearchForItem(item);
+        search[item.id] = buildSearchForItem(item);
     }
 
     Future<void> deleteItem(Document item) async {
@@ -70,6 +73,7 @@ class DocumentsRepository {
         List<String> search = [];
 
         if (item.title != null && item.title.length > 0) search.add(item.title.toLowerCase());
+        if (item.note != null && item.note.length > 0) search.add(item.note.toLowerCase());
 
         return search.join(' ');
     }

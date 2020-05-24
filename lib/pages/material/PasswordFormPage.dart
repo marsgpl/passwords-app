@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:passwords/constants.dart';
 import 'package:passwords/helpers/capitalize.dart';
 import 'package:passwords/model/AppStateModel.dart';
-import 'package:passwords/model/Login.dart';
+import 'package:passwords/model/Password.dart';
 import 'package:passwords/pages/material/BasePage.dart';
 
 const INPUT_ROW_HEIGHT = 76.5;
@@ -24,20 +24,22 @@ const SECRET_QUESTIONS_ANSWERS_EXAMPLES = [
     'iPug',
 ];
 
-class LoginFormPage extends StatefulWidget {
-    final Login item;
-    final regexp2FaSplit = new RegExp('[^a-zA-Z0-9\-\_]+');
+class PasswordFormPage extends StatefulWidget {
+    final Password item;
+    final regexp2FaSplit = RegExp(r'[^a-z0-9\-\_]+',
+        multiLine: true,
+        caseSensitive: false);
 
-    LoginFormPage({
+    PasswordFormPage({
         Key key,
         this.item,
     }) : super(key: key);
 
     @override
-    LoginFormPageState createState() => LoginFormPageState();
+    PasswordFormPageState createState() => PasswordFormPageState();
 }
 
-class LoginFormPageState extends BasePageState<LoginFormPage> {
+class PasswordFormPageState extends BasePageState<PasswordFormPage> {
     TextEditingController titleController;
     TextEditingController loginController;
     TextEditingController passwordController;
@@ -77,7 +79,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         websiteFocus = FocusNode();
         backup2faCodesFocus = FocusNode();
 
-        Login item = widget.item;
+        Password item = widget.item;
 
         if (item == null) {
             titleController = TextEditingController();
@@ -139,14 +141,14 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
     Widget build(BuildContext context) => Scaffold(
         appBar: buildAppBar(),
         body: Builder(
-            builder: (context) => buildBody(context),
+            builder: buildBody,
         ),
     );
 
     Widget buildAppBar() => AppBar(
         title: widget.item == null ?
-            const Text('New login') :
-            const Text('Edit login'),
+            const Text('New password') :
+            const Text('Edit password'),
     );
 
     Widget buildBody(BuildContext context) {
@@ -277,7 +279,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
 
         final model = Provider.of<AppStateModel>(context, listen: false);
 
-        await model.saveLogin(widget.item);
+        await model.savePassword(widget.item);
 
         Navigator.of(context).pop();
     }
@@ -285,7 +287,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
     Future<void> deleteItemConfirmed() async {
         final model = Provider.of<AppStateModel>(context, listen: false);
 
-        await model.deleteLogin(widget.item);
+        await model.deletePassword(widget.item);
 
         Navigator.of(context).pop();
     }
@@ -336,7 +338,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             }
         }
 
-        Login item = Login(
+        final item = Password(
             title: capitalize(titleText),
             login: loginController.text.trim(),
             password: passwordController.text,
@@ -348,7 +350,7 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
 
         final model = Provider.of<AppStateModel>(context, listen: false);
 
-        await model.addLogin(item);
+        await model.addPassword(item);
 
         Navigator.of(context).pop();
     }
@@ -359,7 +361,6 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         focusNode: titleFocus,
         decoration: InputDecoration(
             labelText: 'Title',
-            hasFloatingPlaceholder: true,
             counter: fieldCounter('Service name', false),
             contentPadding: fieldPadding(false),
         ),
@@ -380,7 +381,6 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         focusNode: loginFocus,
         decoration: InputDecoration(
             labelText: 'Login',
-            hasFloatingPlaceholder: true,
             counter: fieldCounter('Username or email', false),
             contentPadding: fieldPadding(false),
         ),
@@ -402,7 +402,6 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             focusNode: passwordFocus,
             decoration: InputDecoration(
                 labelText: 'Password',
-                hasFloatingPlaceholder: true,
                 counter: fieldCounter('Configure generator in settings', false),
                 contentPadding: fieldPadding(false),
             ),
@@ -483,7 +482,6 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             focusNode: websiteFocus,
             decoration: InputDecoration(
                 labelText: 'Website',
-                hasFloatingPlaceholder: true,
                 counter: fieldCounter('Service url, ex. google.com', true),
                 contentPadding: fieldPadding(true),
             ),
@@ -520,7 +518,6 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         focusNode: backup2faCodesFocus,
         decoration: InputDecoration(
             labelText: '2FA backup codes',
-            hasFloatingPlaceholder: true,
             counter: fieldCounter('If authenticator app is lost', false),
             contentPadding: fieldPadding(false),
         ),
@@ -543,7 +540,6 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
             focusNode: secretQuestionsFocuses[index],
             decoration: InputDecoration(
                 labelText: 'Secret question ${index + 1}',
-                hasFloatingPlaceholder: true,
                 counter: fieldCounter(SECRET_QUESTIONS_EXAMPLES[index % 3], isLast),
                 contentPadding: fieldPadding(isLast),
             ),
@@ -578,7 +574,6 @@ class LoginFormPageState extends BasePageState<LoginFormPage> {
         focusNode: secretQuestionsAnswersFocuses[index],
         decoration: InputDecoration(
             labelText: 'Secret question\'s answer ${index + 1}',
-            hasFloatingPlaceholder: true,
             counter: fieldCounter(SECRET_QUESTIONS_ANSWERS_EXAMPLES[index % 3], false),
             contentPadding: fieldPadding(false),
         ),

@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:arrow_path/arrow_path.dart';
 
 class NewItemArrowPainter extends CustomPainter {
+    NewItemArrowPainter(this.text);
+
+    final String text;
+
     @override
     void paint(Canvas canvas, Size size) {
-        TextSpan textSpan = const TextSpan(
-            text: 'Add login',
+        TextSpan textSpan = TextSpan(
+            text: text,
             style: const TextStyle(
                 color: const Color(0xFF444444),
                 fontSize: 14,

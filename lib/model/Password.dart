@@ -1,7 +1,7 @@
 import 'package:uuid/uuid.dart';
 
-class Login implements Comparable<Login> {
-    Login({
+class Password implements Comparable<Password> {
+    Password({
         id,
         createdAt,
         this.title = '',
@@ -26,10 +26,10 @@ class Login implements Comparable<Login> {
     List<String> secretQuestionsAnswers = [];
 
     @override
-    String toString() => '*Login(id: $id)';
+    String toString() => '*Password(id: $id)';
 
     @override
-    int compareTo(Login other) {
+    int compareTo(Password other) {
         int diff;
 
         diff = title.compareTo(other.title);
@@ -41,7 +41,7 @@ class Login implements Comparable<Login> {
         return createdAt.compareTo(other.createdAt);
     }
 
-    Login.fromJson(Map<String, dynamic> jsonData) :
+    Password.fromJson(Map<String, dynamic> jsonData) :
         id = jsonData['id'] ?? Uuid().v4(),
         createdAt = DateTime.parse(jsonData['createdAt'] ?? DateTime.now().toString()),
         title = jsonData['title'] ?? '',

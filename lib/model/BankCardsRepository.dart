@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:passwords/model/Cryptography.dart';
 import 'package:passwords/model/BankCard.dart';
-import 'package:passwords/helpers/generateRandomPassword.dart';
 
 class BankCardsRepository {
     final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -26,13 +25,17 @@ class BankCardsRepository {
             try {
                 BankCard item = BankCard.fromJson(json.decode(crypto.decrypt(localStorageInitialData[key])));
                 items[item.id] = item;
-                localStorageInitialData.remove(key);
             } catch(error) {
                 print('BankCard init from key "$key" error: $error');
             }
         }
 
         buildSearch();
+    }
+
+    void reset() {
+        items = null;
+        search = null;
     }
 
     BankCard getItemById(String id) {
@@ -46,7 +49,7 @@ class BankCardsRepository {
         await storage.write(key: key, value: value);
 
         items[item.id] = item;
-        buildSearchForItem(item);
+        search[item.id] = buildSearchForItem(item);
     }
 
     Future<void> deleteItem(BankCard item) async {

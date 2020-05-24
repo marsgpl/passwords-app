@@ -10,31 +10,36 @@ class SettingsRepository {
     bool get isInited => settings != null;
 
     Future<void> init(Map<String, String> localStorageInitialData) async {
-        final List<Future<void>> tasks = [];
+        String settingsJson = localStorageInitialData[storageKey];
 
         try {
-            settings = Settings.fromJson(json.decode(localStorageInitialData[storageKey]));
-            localStorageInitialData.remove(storageKey);
+            if (settingsJson != null) {
+                settings = Settings.fromJson(json.decode(settingsJson));
+            } else {
+                await resetAndSaveInitial();
+            }
         } catch (error) {
-            tasks.add(reset());
+            await resetAndSaveInitial();
 
             print('Settings init error: $error');
         }
-
-        if (tasks.length > 0) {
-            await Future.wait(tasks);
-        }
     }
 
-    Future<void> reset() async {
+    void reset() {
+        settings = null;
+    }
+
+    Future<void> resetAndSaveInitial() async {
         settings = Settings();
         await save();
     }
 
     Future<void> save() async {
         String key = storageKey;
-        String value = json.encode(settings.toJson());
+        String value = exportAsJsonString();
 
         await storage.write(key: key, value: value);
     }
+
+    String exportAsJsonString() => json.encode(settings.toJson());
 }

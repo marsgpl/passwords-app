@@ -4,10 +4,13 @@ import 'package:passwords/constants.dart';
 import 'package:passwords/PwdIcons.dart';
 import 'package:passwords/model/AppStateModel.dart';
 import 'package:passwords/widgets/PageMessage.dart';
+import 'package:passwords/pages/material/PasswordsPage.dart';
+import 'package:passwords/pages/material/BankCardsPage.dart';
+import 'package:passwords/pages/material/DocumentsPage.dart';
 import 'package:passwords/pages/material/SettingsPage.dart';
 
 class TabsPage extends StatefulWidget {
-    static final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
+    static final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
     @override
     TabsPageState createState() => TabsPageState();
@@ -94,9 +97,9 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
 
     Widget buildBodyPages() {
         switch (bottomNavBarCurrentIndex) {
-            case 0: return Scaffold(appBar: AppBar(title:Text('Logins')),body:Center(child:Text('TODO: Logins')));
-            case 1: return Scaffold(appBar: AppBar(title:Text('Bank cards')),body:Center(child:Text('TODO: Bank cards')));
-            case 2: return Scaffold(appBar: AppBar(title:Text('Documents')),body:Center(child:Text('TODO: Documents')));
+            case 0: return PasswordsPage();
+            case 1: return BankCardsPage();
+            case 2: return DocumentsPage();
             case 3: return SettingsPage();
             default: return null;
         }
@@ -168,8 +171,8 @@ class TabsPageState extends State<TabsPage> with WidgetsBindingObserver {
     Widget buildBottomNavBarPages() => BottomNavigationBar(
         items: const [
             BottomNavigationBarItem(
-                icon: const Icon(PwdIcons.login),
-                title: const Text('Logins'),
+                icon: const Icon(PwdIcons.password),
+                title: const Text('Passwords'),
             ),
             BottomNavigationBarItem(
                 icon: const Icon(PwdIcons.bank_card),

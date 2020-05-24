@@ -29,8 +29,13 @@ class BasePageState<T extends StatefulWidget> extends State<T> {
 
     void snack({
         String message,
+        BuildContext context,
     }) {
-        TabsPage.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(message)));
+        final state = (context != null) ?
+            Scaffold.of(context) :
+            TabsPage.scaffoldKey.currentState;
+
+        state.showSnackBar(SnackBar(content: Text(message)));
     }
 
     Future<void> alert({
@@ -63,13 +68,16 @@ class BasePageState<T extends StatefulWidget> extends State<T> {
         bool isAcceptCritical = false,
         bool isRefuseCritical = false,
         bool titleIsCritical = false,
+        int messageMaxLines,
     }) {
         return showDialog<void>(
             context: context,
             builder: (BuildContext context) => AlertDialog(
                 title: Text(title, style: titleIsCritical ?
                     const TextStyle(color: Colors.red) : null),
-                content: Text(message),
+                content: messageMaxLines == null ?
+                    Text(message) :
+                    Text(message, maxLines: messageMaxLines, overflow: TextOverflow.ellipsis),
                 actions: <Widget>[
                     FlatButton(
                         child: Text(refuseText),
