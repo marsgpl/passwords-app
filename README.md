@@ -43,7 +43,3 @@
 <https://flutter.dev/docs/development/ui/widgets>
 <https://bloclibrary.dev/#/coreconcepts>
 <https://codelabs.developers.google.com/codelabs/flutter-cupertino/>
-
-## Sku
-
-H7CDn2Kj3ybWCoYf5OFhymsIXFpxJUwx
